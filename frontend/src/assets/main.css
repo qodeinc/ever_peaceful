@@ -1,2 +1,16 @@
 @import "tailwindcss";
 
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* Optional: Add custom base styles using @layer base */
+@layer base {
+  /* Your custom base styles here, e.g., */
+  h1 {
+    @apply text-4xl font-bold;
+  }
+  body {
+    @apply bg-gray-100;
+  }
+}
