@@ -59,7 +59,7 @@
         <div class="flex items-center space-x-4">
           <!-- CTA Button (hidden on mobile) -->
           <router-link 
-            to="/take-assessment" 
+            to="/login" 
             class="hidden md:inline-flex items-center px-6 py-2 bg-gradient-to-r from-teal-600 to-teal-700 text-white font-semibold rounded-xl hover:shadow-lg hover:from-teal-700 hover:to-teal-800 transform hover:-translate-y-0.5 transition-all duration-200"
           >
             Take Assessment
@@ -136,7 +136,7 @@
           <!-- Mobile CTA Button -->
           <div class="pt-4">
             <router-link 
-              to="/take-assessment" 
+              to="/login" 
               @click="closeMobileMenu"
               class="block w-full text-center px-6 py-3 bg-gradient-to-r from-teal-600 to-teal-700 text-white font-semibold rounded-xl hover:shadow-lg hover:from-teal-700 hover:to-teal-800 transition-all duration-200"
             >
