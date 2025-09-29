@@ -29,7 +29,6 @@ const router = createRouter({
         description: 'Learn about our mission to provide accessible mental health care'
       }
     },
-    
     // Authentication routes
     {
       path: '/login',
@@ -44,7 +43,7 @@ const router = createRouter({
     },
     {
       path: '/signup',
-      name: 'signup', 
+      name: 'signup',
       component: () => import('../views/auth/Signup.vue'),
       meta: {
         title: 'Create Account - Mental Health Platform',
@@ -58,13 +57,12 @@ const router = createRouter({
       name: 'reset-password',
       component: () => import('../views/auth/ResetPassword.vue'),
       meta: {
-        title: 'Reset Password - Mental Health Platform', 
+        title: 'Reset Password - Mental Health Platform',
         description: 'Reset your account password',
         requiresGuest: true,
         hideLayout: true
       }
     },
-
     // Dashboard routes
     {
       path: '/dashboard',
@@ -82,8 +80,7 @@ const router = createRouter({
         role: 'user'
       }
     },
-    
-    // Therapist route
+    // Therapist routes
     {
       path: '/therapist',
       name: 'therapist',
@@ -93,9 +90,40 @@ const router = createRouter({
         description: 'Manage your clients and sessions',
         requiresAuth: true,
         role: 'therapist'
-      }
+      },
+      children: [
+        {
+          path: 'calendar',
+          name: 'therapist-calendar',
+          components: {
+            default: () => import('../views/therapist/Calendar.vue'),
+            navbar: () => import('../components/layout/Navbar.vue'),
+            footer: () => import('../components/layout/Footer.vue')
+          },
+          meta: {
+            title: 'Therapist Calendar - MindWell Platform',
+            description: 'Manage your appointments via Calendly',
+            requiresAuth: true,
+            role: 'therapist'
+          }
+        },
+        {
+          path: 'callback',
+          name: 'calendly-callback',
+          components: {
+            default: () => import('../views/therapist/Calendar.vue'),
+            navbar: () => import('../components/layout/Navbar.vue'),
+            footer: () => import('../components/layout/Footer.vue')
+          },
+          meta: {
+            title: 'Processing Calendly Authentication',
+            description: 'Processing your Calendly connection',
+            requiresAuth: true,
+            role: 'therapist'
+          }
+        }
+      ]
     },
-
     // Admin route
     {
       path: '/admin',
@@ -108,7 +136,6 @@ const router = createRouter({
         role: 'admin'
       }
     },
-
     // Catch all 404
     {
       path: '/:pathMatch(.*)*',
@@ -135,10 +162,12 @@ const router = createRouter({
 
 // Navigation guards
 router.beforeEach((to, from, next) => {
+  // Update page title
   if (to.meta?.title) {
     document.title = to.meta.title as string
   }
-  
+
+  // Update meta description
   if (to.meta?.description) {
     let descriptionElement = document.querySelector('meta[name="description"]')
     if (!descriptionElement) {
@@ -149,9 +178,25 @@ router.beforeEach((to, from, next) => {
     descriptionElement.setAttribute('content', to.meta.description as string)
   }
 
-  const isAuthenticated = true
-  const userRole = to.meta?.role || 'user'
-  
+  // Mock authentication logic (replace with your actual auth check)
+  const isAuthenticated = true // TODO: Replace with real auth check (e.g., Firebase, JWT)
+  const userRole = 'therapist' // TODO: Replace with actual user role from auth system
+
+  // Handle requiresGuest routes
+  if (to.meta?.requiresGuest && isAuthenticated) {
+    return next(userRole === 'therapist' ? '/therapist' : '/dashboard/user')
+  }
+
+  // Handle requiresAuth routes
+  if (to.meta?.requiresAuth && !isAuthenticated) {
+    return next('/login')
+  }
+
+  // Handle role-based access
+  if (to.meta?.role && to.meta.role !== userRole) {
+    return next('/dashboard/user') // Redirect to user dashboard if role mismatch
+  }
+
   next()
 })
 
