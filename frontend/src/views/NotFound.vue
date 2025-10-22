@@ -1,5 +1,5 @@
 <template>
-  <section class="relative min-h-screen bg-white flex items-center justify-center">
+  <section class="relative min-h-screen bg-white flex items-center justify-center mt-32">
     <!-- Subtle background pattern matching hero -->
     <div class="absolute inset-0 bg-gradient-to-br from-teal-50/30 via-transparent to-emerald-50/30 pointer-events-none"></div>
     

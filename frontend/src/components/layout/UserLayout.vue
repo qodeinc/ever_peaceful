@@ -33,44 +33,118 @@
       </div>
 
       <!-- Navigation - Scrollable -->
-      <nav class="mt-6 px-2 h-[calc(100vh-5rem)] overflow-y-auto">
-        <div class="space-y-2">
+      <div class="flex flex-col h-[calc(100vh-5rem)]">
+        <nav class="flex-1 mt-6 px-2 overflow-y-auto">
+          <div class="space-y-2 pb-4">
+            <template v-for="item in navItems" :key="item.name">
+              <!-- Regular nav items -->
+              <button
+                v-if="!item.hasDropdown"
+                @click="setActiveComponent(item.name)"
+                :title="sidebarCollapsed ? item.title : ''"
+                :class="[
+                  'w-full flex items-center px-3 py-3 text-left text-sm font-medium rounded-xl border border-transparent transition-all duration-200',
+                  activeComponent === item.name ? 'bg-teal-100 text-teal-700 border-teal-200' : 'text-gray-600 hover:bg-teal-50'
+                ]"
+              >
+                <component :is="item.icon" class="w-5 h-5 flex-shrink-0" :class="sidebarCollapsed ? 'mx-auto' : 'mr-3'" />
+                <span v-if="!sidebarCollapsed" class="truncate flex-1">{{ item.title }}</span>
+                <span v-if="item.badge && !sidebarCollapsed" class="ml-auto px-2 py-1 text-xs rounded-full" :class="item.badgeClass">
+                  {{ item.badge }}
+                </span>
+              </button>
+
+              <!-- Dropdown nav items -->
+              <div v-else>
+                <button
+                  @click="toggleDropdown(item.name)"
+                  :title="sidebarCollapsed ? item.title : ''"
+                  :class="[
+                    'w-full flex items-center px-3 py-3 text-left text-sm font-medium rounded-xl border border-transparent transition-all duration-200',
+                    activeDropdown === item.name || isDropdownActive(item) ? 'bg-teal-100 text-teal-700 border-teal-200' : 'text-gray-600 hover:bg-teal-50'
+                  ]"
+                >
+                  <component :is="item.icon" class="w-5 h-5 flex-shrink-0" :class="sidebarCollapsed ? 'mx-auto' : 'mr-3'" />
+                  <span v-if="!sidebarCollapsed" class="truncate flex-1">{{ item.title }}</span>
+                  <ChevronDown v-if="!sidebarCollapsed" :class="['w-4 h-4 ml-auto transition-transform', activeDropdown === item.name ? 'rotate-180' : '']" />
+                </button>
+                
+                <!-- Nested dropdown children (Level 2) -->
+                <div 
+                  v-if="activeDropdown === item.name && !sidebarCollapsed" 
+                  class="ml-4 mt-1 space-y-1 border-l-2 border-teal-200 pl-2"
+                >
+                  <template v-for="child in item.children" :key="child.name">
+                    <!-- Regular child items -->
+                    <button
+                      v-if="!child.hasDropdown"
+                      @click="setActiveComponent(child.name)"
+                      :class="[
+                        'w-full flex items-center px-3 py-2 text-left text-sm rounded-lg transition-all duration-200',
+                        activeComponent === child.name ? 'bg-teal-50 text-teal-700 font-medium' : 'text-gray-600 hover:bg-gray-50'
+                      ]"
+                    >
+                      {{ child.title }}
+                    </button>
+
+                    <!-- Nested dropdown children (Level 3) -->
+                    <div v-else>
+                      <button
+                        @click="toggleNestedDropdown(child.name)"
+                        :class="[
+                          'w-full flex items-center px-3 py-2 text-left text-sm rounded-lg transition-all duration-200',
+                          activeNestedDropdown === child.name || child.children?.some(subchild => activeComponent === subchild.name) ? 'bg-teal-50 text-teal-700 font-medium' : 'text-gray-600 hover:bg-gray-50'
+                        ]"
+                      >
+                        <span class="flex-1">{{ child.title }}</span>
+                        <ChevronDown :class="['w-3 h-3 transition-transform', activeNestedDropdown === child.name ? 'rotate-180' : '']" />
+                      </button>
+                      
+                      <!-- Sub-children (Level 3) -->
+                      <div 
+                        v-if="activeNestedDropdown === child.name" 
+                        class="ml-3 mt-1 space-y-1 border-l-2 border-teal-200 pl-2"
+                      >
+                        <button
+                          v-for="subchild in child.children"
+                          :key="subchild.name"
+                          @click="setActiveComponent(subchild.name)"
+                          :class="[
+                            'w-full flex items-center px-2 py-1.5 text-left text-xs rounded-lg transition-all duration-200',
+                            activeComponent === subchild.name ? 'bg-teal-50 text-teal-700 font-medium' : 'text-gray-600 hover:bg-gray-50'
+                          ]"
+                        >
+                          {{ subchild.title }}
+                        </button>
+                      </div>
+                    </div>
+                  </template>
+                </div>
+              </div>
+            </template>
+          </div>
+        </nav>
+
+        <!-- Logout Button - Fixed at bottom -->
+        <div class="px-2 pb-4 border-t border-gray-200 pt-2">
           <button
-            v-for="item in navItems"
-            :key="item.name"
-            @click="setActiveComponent(item.name)"
-            :title="sidebarCollapsed ? item.title : ''"
-            :class="[
-              'w-full flex items-center px-3 py-3 text-left text-sm font-medium rounded-xl border border-transparent transition-all duration-200',
-              activeComponent === item.name ? 'bg-teal-100 text-teal-700 border-teal-200' : 'text-gray-600 hover:bg-teal-50'
-            ]"
+            v-if="!sidebarCollapsed"
+            @click="handleLogout"
+            class="w-full flex items-center px-3 py-3 text-left text-sm font-medium rounded-xl text-red-600 hover:bg-red-50 hover:text-red-700 transition-all duration-200"
           >
-            <component :is="item.icon" class="w-5 h-5 flex-shrink-0" :class="sidebarCollapsed ? 'mx-auto' : 'mr-3'" />
-            <span v-if="!sidebarCollapsed" class="truncate flex-1">{{ item.title }}</span>
-            <span v-if="item.badge && !sidebarCollapsed" class="ml-auto px-2 py-1 text-xs rounded-full" :class="item.badgeClass">
-              {{ item.badge }}
-            </span>
+            <LogOut class="w-5 h-5 flex-shrink-0 mr-3" />
+            <span class="truncate flex-1">Logout</span>
+          </button>
+          <button
+            v-else
+            @click="handleLogout"
+            :title="'Logout'"
+            class="w-full flex items-center px-3 py-3 text-left text-sm font-medium rounded-xl text-red-600 hover:bg-red-50 hover:text-red-700 transition-all duration-200"
+          >
+            <LogOut class="w-5 h-5 flex-shrink-0 mx-auto" />
           </button>
         </div>
-
-        <!-- Logout Button -->
-        <button
-          v-if="!sidebarCollapsed"
-          @click="handleLogout"
-          class="w-full flex items-center px-3 py-3 text-left text-sm font-medium rounded-xl border-t border-gray-200 text-red-600 hover:bg-red-50 hover:text-red-700 transition-all duration-200 mt-2"
-        >
-          <LogOut class="w-5 h-5 flex-shrink-0 mr-3" />
-          <span class="truncate flex-1">Logout</span>
-        </button>
-        <button
-          v-else
-          @click="handleLogout"
-          :title="'Logout'"
-          class="w-full flex items-center px-3 py-3 text-left text-sm font-medium rounded-xl border-t border-gray-200 text-red-600 hover:bg-red-50 hover:text-red-700 transition-all duration-200 mt-2"
-        >
-          <LogOut class="w-5 h-5 flex-shrink-0 mx-auto" />
-        </button>
-      </nav>
+      </div>
     </div>
 
     <!-- Main Content Area -->
@@ -188,6 +262,13 @@
         </transition>
       </main>
     </div>
+
+    <!-- Mobile Menu Overlay -->
+    <div 
+      v-if="isMobileMenuOpen"
+      @click="isMobileMenuOpen = false"
+      class="fixed inset-0 bg-black/50 z-40 lg:hidden"
+    />
   </div>
 </template>
 
@@ -196,7 +277,7 @@ import { ref, computed, defineAsyncComponent } from 'vue'
 import { useRouter } from 'vue-router'
 import { 
   Brain, Bell, Calendar, BookOpen, MessageCircle, TrendingUp, 
-  Menu, ChevronLeft, ChevronRight, LogOut, Home, User, Settings, FileText 
+  Menu, ChevronLeft, ChevronRight, ChevronDown, LogOut, Home, User, Settings, FileText, ClipboardList, Activity 
 } from 'lucide-vue-next'
 import { useDashboardNavigation } from '../../composables/useDashboardNavigation'
 
@@ -204,6 +285,15 @@ import { useDashboardNavigation } from '../../composables/useDashboardNavigation
 const componentMap = {
   dashboard: defineAsyncComponent(() => import('../../views/dashboard/UserDashboard.vue')),
   'book-session': defineAsyncComponent(() => import('../../views/user/BookSession.vue')),
+  'gad-2': defineAsyncComponent(() => import('../../views/user/assessments/GAD2.vue')),
+  'gad-7': defineAsyncComponent(() => import('../../views/user/assessments/GAD7.vue')),
+  'phq-2': defineAsyncComponent(() => import('../../views/user/assessments/PHQ2.vue')),
+  'phq-9': defineAsyncComponent(() => import('../../views/user/assessments/PHQ9.vue')),
+  'pc-ptsd-5': defineAsyncComponent(() => import('../../views/user/assessments/PCPTSD5.vue')),
+  'audit-c': defineAsyncComponent(() => import('../../views/user/assessments/AUDITC.vue')),
+  'cage': defineAsyncComponent(() => import('../../views/user/assessments/CAGE.vue')),
+  'cage-aid': defineAsyncComponent(() => import('../../views/user/assessments/CAGEAID.vue')),
+  'tics': defineAsyncComponent(() => import('../../views/user/assessments/TICS.vue')),
   resources: defineAsyncComponent(() => import('../../views/user/Resources.vue')),
   chat: defineAsyncComponent(() => import('../../views/user/Chat.vue')),
   progress: defineAsyncComponent(() => import('../../views/user/Progress.vue')),
@@ -224,6 +314,8 @@ const notifications = ref(3)
 const showNotificationsDropdown = ref(false)
 const showProfileDropdown = ref(false)
 const unreadMessages = ref(2)
+const activeDropdown = ref<string | null>(null)
+const activeNestedDropdown = ref<string | null>(null)
 
 // User profile
 const userProfile = ref({
@@ -250,6 +342,37 @@ const notificationList = ref([
 const navItems = ref([
   { name: 'dashboard', title: 'Dashboard', icon: Home },
   { name: 'book-session', title: 'Book Session', icon: Calendar },
+  { 
+    name: 'assessments', 
+    title: 'Assessments', 
+    icon: ClipboardList, 
+    hasDropdown: true,
+    children: [
+      { 
+        name: 'mental-health', 
+        title: 'Mental Health Screening',
+        hasDropdown: true,
+        children: [
+          { name: 'gad-2', title: 'Anxiety: GAD-2' },
+          { name: 'gad-7', title: 'Anxiety: GAD-7' },
+          { name: 'phq-2', title: 'Depression: PHQ-2' },
+          { name: 'phq-9', title: 'Depression: PHQ-9' },
+          { name: 'pc-ptsd-5', title: 'PTSD: PC-PTSD-5' }
+        ]
+      },
+      { 
+        name: 'substance-use', 
+        title: 'Substance Use Screening',
+        hasDropdown: true,
+        children: [
+          { name: 'audit-c', title: 'Alcohol: AUDIT-C' },
+          { name: 'cage', title: 'Alcohol: CAGE' },
+          { name: 'cage-aid', title: 'CAGE-AID' },
+          { name: 'tics', title: 'Drug Use: TICS' }
+        ]
+      }
+    ]
+  },
   { name: 'resources', title: 'Resources', icon: BookOpen },
   { name: 'chat', title: 'Chat', icon: MessageCircle, badge: unreadMessages.value, badgeClass: 'bg-red-100 text-red-600' },
   { name: 'progress', title: 'Progress', icon: TrendingUp },
@@ -262,6 +385,15 @@ const navItems = ref([
 const sectionTitles: Record<string, string> = {
   dashboard: 'Dashboard',
   'book-session': 'Book Session',
+  'gad-2': 'GAD-2 Assessment',
+  'gad-7': 'GAD-7 Assessment',
+  'phq-2': 'PHQ-2 Assessment',
+  'phq-9': 'PHQ-9 Assessment',
+  'pc-ptsd-5': 'PC-PTSD-5 Assessment',
+  'audit-c': 'AUDIT-C Assessment',
+  'cage': 'CAGE Assessment',
+  'cage-aid': 'CAGE-AID Assessment',
+  'tics': 'TICS Assessment',
   resources: 'Resources',
   chat: 'Chat',
   progress: 'Progress',
@@ -273,6 +405,15 @@ const sectionTitles: Record<string, string> = {
 const sectionDescriptions: Record<string, string> = {
   dashboard: 'Your wellness journey overview',
   'book-session': 'Schedule a session with your therapist',
+  'gad-2': 'Brief anxiety screening assessment',
+  'gad-7': 'Comprehensive anxiety assessment',
+  'phq-2': 'Brief depression screening assessment',
+  'phq-9': 'Comprehensive depression assessment',
+  'pc-ptsd-5': 'PTSD screening assessment',
+  'audit-c': 'Alcohol use screening assessment',
+  'cage': 'Alcohol dependence screening',
+  'cage-aid': 'Substance abuse screening',
+  'tics': 'Drug use screening assessment',
   resources: 'Access wellness content and resources',
   chat: 'Message your therapist',
   progress: 'Track your wellness journey',
@@ -291,6 +432,28 @@ const currentSectionDescription = computed(() => {
 })
 
 // Methods
+const isDropdownActive = (item: any) => {
+  if (!item.children) return false
+  return item.children.some((child: any) => {
+    if (activeComponent.value === child.name) return true
+    if (child.children) {
+      return child.children.some((subchild: any) => activeComponent.value === subchild.name)
+    }
+    return false
+  })
+}
+
+const toggleDropdown = (name: string) => {
+  if (sidebarCollapsed.value) {
+    sidebarCollapsed.value = false
+  }
+  activeDropdown.value = activeDropdown.value === name ? null : name
+}
+
+const toggleNestedDropdown = (name: string) => {
+  activeNestedDropdown.value = activeNestedDropdown.value === name ? null : name
+}
+
 const toggleNotificationsDropdown = () => {
   showNotificationsDropdown.value = !showNotificationsDropdown.value
   showProfileDropdown.value = false
@@ -313,11 +476,11 @@ const handleLogout = () => {
 }
 
 const onEnter = () => {
-  // Handled in App.vue
+  // Animation handled by transition
 }
 
 const onLeave = () => {
-  // Handled in App.vue
+  // Animation handled by transition
 }
 </script>
 
@@ -335,8 +498,14 @@ const onLeave = () => {
 }
 
 @keyframes fadeInUp {
-  from { opacity: 0; transform: translateY(20px); }
-  to { opacity: 1; transform: translateY(0); }
+  from { 
+    opacity: 0; 
+    transform: translateY(20px); 
+  }
+  to { 
+    opacity: 1; 
+    transform: translateY(0); 
+  }
 }
 
 .animate-fadeInRight {

@@ -31,12 +31,44 @@
           <ChevronRight v-else class="w-5 h-5" />
         </button>
       </div>
-
       <!-- Navigation - Scrollable -->
       <nav class="mt-6 px-2 h-[calc(100vh-5rem)] overflow-y-auto">
         <div class="space-y-2">
+          <!-- Dynamic navigation items before calendar -->
           <button
-            v-for="item in navItems"
+            v-for="item in navItemsBeforeCalendar"
+            :key="item.name"
+            @click="setActiveComponent(item.name)"
+            :title="sidebarCollapsed ? item.title : ''"
+            :class="[
+              'w-full flex items-center px-3 py-3 text-left text-sm font-medium rounded-xl border border-transparent transition-all duration-200',
+              activeComponent === item.name ? 'bg-emerald-100 text-emerald-700 border-emerald-200' : 'text-gray-600 hover:bg-emerald-50'
+            ]"
+          >
+            <component :is="item.icon" class="w-5 h-5 flex-shrink-0" :class="sidebarCollapsed ? 'mx-auto' : 'mr-3'" />
+            <span v-if="!sidebarCollapsed" class="truncate flex-1">{{ item.title }}</span>
+            <span v-if="item.badge && !sidebarCollapsed" class="ml-auto px-2 py-1 text-xs rounded-full" :class="item.badgeClass">
+              {{ item.badge }}
+            </span>
+          </button>
+
+          <!-- Calendar as a router-link -->
+          <router-link
+            to="/therapist/calendar"
+            :title="sidebarCollapsed ? 'Calendar' : ''"
+            :class="[
+              'w-full flex items-center px-3 py-3 text-left text-sm font-medium rounded-xl border border-transparent transition-all duration-200',
+              isCalendarActive ? 'bg-emerald-100 text-emerald-700 border-emerald-200' : 'text-gray-600 hover:bg-emerald-50'
+            ]"
+            @click="isMobileMenuOpen = false"
+          >
+            <Calendar class="w-5 h-5 flex-shrink-0" :class="sidebarCollapsed ? 'mx-auto' : 'mr-3'" />
+            <span v-if="!sidebarCollapsed" class="truncate flex-1">Calendar</span>
+          </router-link>
+
+          <!-- Dynamic navigation items after calendar -->
+          <button
+            v-for="item in navItemsAfterCalendar"
             :key="item.name"
             @click="setActiveComponent(item.name)"
             :title="sidebarCollapsed ? item.title : ''"
@@ -52,7 +84,6 @@
             </span>
           </button>
         </div>
-
         <!-- Logout Button -->
         <button
           v-if="!sidebarCollapsed"
@@ -72,7 +103,6 @@
         </button>
       </nav>
     </div>
-
     <!-- Main Content Area -->
     <div :class="['transition-all duration-300', sidebarCollapsed ? 'ml-16' : 'ml-64']">
       <!-- Top Navigation Bar -->
@@ -150,7 +180,6 @@
                   </div>
                 </div>
               </div>
-
               <!-- Profile Dropdown with Avatar Initials -->
               <div class="relative">
                 <button 
@@ -195,14 +224,16 @@
           </div>
         </div>
       </header>
-
       <!-- Content Area with Transition -->
       <main class="p-6">
+        <!-- Router view for calendar (with callback) -->
+        <router-view v-if="isCalendarRoute" />
+        
+        <!-- Dynamic component rendering for all other views -->
         <transition
+          v-else
           name="dashboard-fade"
           mode="out-in"
-          @enter="onEnter"
-          @leave="onLeave"
         >
           <component :is="componentMap[activeComponent]" :key="activeComponent" />
         </transition>
@@ -212,30 +243,29 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, defineAsyncComponent } from 'vue'
-import { useRouter } from 'vue-router'
+import { ref, computed, watch } from 'vue'
+import { useRouter, useRoute } from 'vue-router'
 import { 
-  Stethoscope, Bell, UserPlus, BookOpen, BarChart3, GraduationCap, Home, Calendar, 
-  Menu, ChevronLeft, ChevronRight, LogOut, Users, PlayCircle, FileText, AlertTriangle 
+  Stethoscope, Bell, Home, Calendar, Menu, ChevronLeft, ChevronRight, LogOut, 
+  Users, FileText, ClipboardList, MessageCircle, BookOpen
 } from 'lucide-vue-next'
+import { logout } from '../../utils/auth'
+import { defineAsyncComponent } from 'vue'
 
-// Async components for dynamic rendering
+// Async components for dynamic rendering (excluding calendar)
 const componentMap = {
   dashboard: defineAsyncComponent(() => import('../../views/dashboard/TherapistDashboard.vue')),
-  'clients-new': defineAsyncComponent(() => import('../../views/therapist/ClientsNew.vue')),
+  clients: defineAsyncComponent(() => import('../../views/therapist/Clients.vue')),
   resources: defineAsyncComponent(() => import('../../views/therapist/Resources.vue')),
-  reports: defineAsyncComponent(() => import('../../views/therapist/Reports.vue')),
-  'professional-development': defineAsyncComponent(() => import('../../views/therapist/ProfessionalDevelopment.vue')),
-  profile: defineAsyncComponent(() => import('../../views/therapist/Profile.vue')),
-  account: defineAsyncComponent(() => import('../../views/therapist/Account.vue')),
-  calendar: defineAsyncComponent(() => import('../../views/therapist/Calendar.vue')),
-  'client-details': defineAsyncComponent(() => import('../../views/therapist/ClientDetails.vue')),
-  'session-start': defineAsyncComponent(() => import('../../views/therapist/SessionStart.vue')),
   'session-notes': defineAsyncComponent(() => import('../../views/therapist/SessionNotes.vue')),
-  'alert-details': defineAsyncComponent(() => import('../../views/therapist/AlertDetails.vue'))
+  tasks: defineAsyncComponent(() => import('../../views/therapist/Tasks.vue')),
+  chat: defineAsyncComponent(() => import('../../views/therapist/Chat.vue')),
+  profile: defineAsyncComponent(() => import('../../views/therapist/Profile.vue')),
+  account: defineAsyncComponent(() => import('../../views/therapist/Account.vue'))
 }
 
 const router = useRouter()
+const route = useRoute()
 
 // Reactive state
 const sidebarCollapsed = ref(false)
@@ -246,70 +276,75 @@ const showNotificationsDropdown = ref(false)
 const showProfileDropdown = ref(false)
 const activeComponent = ref('dashboard')
 
-// Sidebar indicators
-const pendingClients = ref(3)
-const urgentAlerts = ref(2)
-
 // Notification list
 const notificationList = ref([
-  { id: 1, title: 'New client assigned: Sarah Johnson', time: '10 minutes ago' },
+  { id: 1, title: 'New message from Sarah Johnson', time: '10 minutes ago' },
   { id: 2, title: 'Session reminder: Mike Chen at 3:30 PM', time: '30 minutes ago' },
-  { id: 3, title: 'Urgent message from David Park', time: '1 hour ago' },
+  { id: 3, title: 'Task due: Follow-up notes', time: '1 hour ago' },
   { id: 4, title: 'New resource added to library', time: '2 hours ago' },
-  { id: 5, title: 'Training module completed', time: '1 day ago' }
+  { id: 5, title: 'Client update requested', time: '1 day ago' }
 ])
 
-// Navigation items
-const navItems = ref([
+// Navigation items split around calendar
+const navItemsBeforeCalendar = ref([
   { name: 'dashboard', title: 'Dashboard', icon: Home },
-  { name: 'clients-new', title: 'Add New Client', icon: UserPlus, badge: pendingClients.value, badgeClass: 'bg-blue-100 text-blue-600' },
-  { name: 'resources', title: 'Resource Library', icon: BookOpen },
-  { name: 'reports', title: 'Generate Reports', icon: BarChart3 },
-  { name: 'professional-development', title: 'Training & CEUs', icon: GraduationCap },
-  { name: 'calendar', title: 'Calendar', icon: Calendar },
-  { name: 'client-details', title: 'Client Details', icon: Users },
-  { name: 'session-start', title: 'Start Session', icon: PlayCircle },
+  { name: 'clients', title: 'Clients', icon: Users }
+])
+
+const navItemsAfterCalendar = ref([
   { name: 'session-notes', title: 'Session Notes', icon: FileText },
-  { name: 'alert-details', title: 'Alert Details', icon: AlertTriangle, badge: urgentAlerts.value, badgeClass: 'bg-red-100 text-red-600' }
+  { name: 'tasks', title: 'Tasks/Reminders', icon: ClipboardList },
+  { name: 'chat', title: 'Messaging', icon: MessageCircle },
+  { name: 'resources', title: 'Resources', icon: BookOpen }
 ])
 
 // Section configuration
 const sectionTitles: Record<string, string> = {
   dashboard: 'Dashboard',
-  'clients-new': 'Add New Client',
-  resources: 'Resource Library',
-  reports: 'Generate Reports',
-  'professional-development': 'Training & CEUs',
+  clients: 'Clients',
+  resources: 'Resources',
+  'session-notes': 'Session Notes',
+  tasks: 'Tasks/Reminders',
+  chat: 'Messaging',
   profile: 'Profile Settings',
   account: 'Account Settings',
-  calendar: 'Calendar',
-  'client-details': 'Client Details',
-  'session-start': 'Start Session',
-  'session-notes': 'Session Notes',
-  'alert-details': 'Alert Details'
+  calendar: 'Calendar'
 }
 
 const sectionDescriptions: Record<string, string> = {
   dashboard: 'Manage your clients and sessions',
-  'clients-new': 'Add a new client to your roster',
+  clients: 'View and manage your clients',
   resources: 'Access wellness resources and materials',
-  reports: 'Generate and view client and session reports',
-  'professional-development': 'Access training modules and continuing education units',
+  'session-notes': 'View and edit session notes',
+  tasks: 'Manage your tasks and reminders',
+  chat: 'Communicate with clients',
   profile: 'Manage your therapist profile settings',
   account: 'Manage your account details',
-  calendar: 'View and manage your schedule',
-  'client-details': 'View client information and history',
-  'session-start': 'Begin a therapy session',
-  'session-notes': 'View and edit session notes',
-  'alert-details': 'Review and respond to urgent alerts'
+  calendar: 'View and manage your schedule'
 }
+
+// Check if current route is calendar-related
+const isCalendarRoute = computed(() => {
+  return route.name === 'therapist-calendar' || route.name === 'calendly-callback'
+})
+
+// Check if calendar is active (for styling)
+const isCalendarActive = computed(() => {
+  return isCalendarRoute.value
+})
 
 // Compute current section title and description
 const currentSectionTitle = computed(() => {
+  if (isCalendarRoute.value) {
+    return sectionTitles['calendar']
+  }
   return sectionTitles[activeComponent.value] || 'Dashboard'
 })
 
 const currentSectionDescription = computed(() => {
+  if (isCalendarRoute.value) {
+    return sectionDescriptions['calendar']
+  }
   return sectionDescriptions[activeComponent.value] || 'Manage your clients and sessions'
 })
 
@@ -327,11 +362,24 @@ const therapistInitials = computed(() => {
     : names[0][0] || 'EJ'
 })
 
+// Watch for route changes to reset active component when navigating away from calendar
+watch(() => route.name, (newRouteName) => {
+  // When navigating to base therapist route, reset to dashboard
+  if (newRouteName === 'therapist') {
+    activeComponent.value = 'dashboard'
+  }
+})
+
 // Methods
 const setActiveComponent = (name: string) => {
   activeComponent.value = name
   showProfileDropdown.value = false
   isMobileMenuOpen.value = false
+  
+  // Navigate to base therapist route when selecting dynamic components
+  if (route.path !== '/therapist') {
+    router.push('/therapist')
+  }
 }
 
 const toggleAvailability = () => {
@@ -359,17 +407,9 @@ const handleNotificationClick = (id: number) => {
   // Add navigation or action logic
 }
 
-const handleLogout = () => {
+const handleLogout = async () => {
   showProfileDropdown.value = false
-  router.push('/login')
-}
-
-const onEnter = () => {
-  // Handled in App.vue
-}
-
-const onLeave = () => {
-  // Handled in App.vue
+  await logout(router)
 }
 </script>
 

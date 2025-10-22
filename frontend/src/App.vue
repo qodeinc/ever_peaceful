@@ -2,6 +2,7 @@
   <div id="app">
     <!-- Router View with smooth transitions -->
     <router-view v-slot="{ Component, route }" name="navbar">
+    <DevAuthPanel />
       <transition name="fade" mode="out-in">
         <component :is="Component" :key="route.path" v-if="!route.meta?.hideLayout" />
       </transition>
@@ -43,6 +44,7 @@
 <script setup lang="ts">
 import { ref, nextTick } from 'vue'
 import { useRouter, RouteLocationNormalized } from 'vue-router'
+import DevAuthPanel from './components/DevAuthPanel.vue'
 
 const router = useRouter()
 const isRouteLoading = ref(false)
@@ -94,14 +96,6 @@ router.afterEach(() => {
   box-sizing: border-box;
 }
 
-body {
-  margin: 0;
-  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen',
-    'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue',
-    sans-serif;
-  -webkit-font-smoothing: antialiased;
-  -moz-osx-font-smoothing: grayscale;
-}
 
 /* Page transition styles - FIXED: Removed transforms that break absolute positioning */
 .page-fade-enter-active,

@@ -1,55 +1,146 @@
 <template>
-  <div class="bg-white rounded-2xl p-6 shadow-lg border border-gray-100">
-    <h2 class="text-2xl font-bold text-gray-900 mb-4">Chat</h2>
-    <p class="text-gray-600 mb-6">Message your therapist.</p>
-    <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
-      <!-- Therapist List -->
-      <div class="lg:col-span-1 bg-gray-50 rounded-xl p-4">
-        <h3 class="text-lg font-semibold text-gray-900 mb-4">Therapists</h3>
-        <div v-for="therapist in therapists" :key="therapist.id"
-             @click="selectTherapist(therapist.id)"
-             class="flex items-center space-x-3 p-3 rounded-xl hover:bg-teal-50 cursor-pointer transition-colors"
-             :class="selectedTherapistId === therapist.id ? 'bg-teal-100' : ''">
-          <img :src="therapist.avatar" :alt="therapist.name" class="w-10 h-10 rounded-full border-2 border-teal-200">
-          <div>
-            <p class="font-medium text-gray-900">{{ therapist.name }}</p>
-            <p class="text-xs text-gray-600">{{ therapist.lastMessage }}</p>
-          </div>
-          <span v-if="therapist.unreadCount" class="ml-auto px-2 py-1 text-xs rounded-full bg-red-100 text-red-600">
-            {{ therapist.unreadCount }}
-          </span>
+  <div class="h-[calc(100vh-12rem)] flex gap-6">
+    <!-- Conversations List -->
+    <div class="w-80 bg-white rounded-2xl shadow-sm border border-gray-200 flex flex-col">
+      <!-- Search -->
+      <div class="p-4 border-b border-gray-200">
+        <div class="relative">
+          <Search class="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
+          <input
+            v-model="searchQuery"
+            type="text"
+            placeholder="Search conversations..."
+            class="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-xl focus:ring-2 focus:ring-teal-500 focus:border-transparent"
+          />
         </div>
       </div>
 
-      <!-- Chat Area -->
-      <div class="lg:col-span-2 bg-gray-50 rounded-xl p-4">
-        <div v-if="selectedTherapistId" class="h-[400px] overflow-y-auto mb-4">
-          <div v-for="message in messages" :key="message.id" 
-               class="mb-4 flex"
-               :class="message.isSent ? 'justify-end' : 'justify-start'">
-            <div class="max-w-[70%] p-3 rounded-xl"
-                 :class="message.isSent ? 'bg-teal-600 text-white' : 'bg-white border border-gray-200'">
-              <p class="text-sm">{{ message.text }}</p>
-              <p class="text-xs text-gray-500 mt-1">{{ formatTime(message.time) }}</p>
+      <!-- Conversations -->
+      <div class="flex-1 overflow-y-auto">
+        <div
+          v-for="conversation in filteredConversations"
+          :key="conversation.id"
+          @click="selectConversation(conversation.id)"
+          :class="[
+            'p-4 border-b border-gray-200 cursor-pointer transition-colors',
+            selectedConversation === conversation.id ? 'bg-teal-50' : 'hover:bg-gray-50'
+          ]"
+        >
+          <div class="flex items-start gap-3">
+            <div class="w-12 h-12 rounded-full bg-teal-600 text-white flex items-center justify-center text-sm font-bold flex-shrink-0">
+              {{ conversation.avatar }}
+            </div>
+            <div class="flex-1 min-w-0">
+              <div class="flex items-start justify-between">
+                <h4 class="font-semibold text-gray-900 truncate">{{ conversation.name }}</h4>
+                <span class="text-xs text-gray-500 ml-2">{{ conversation.time }}</span>
+              </div>
+              <p class="text-sm text-gray-600 truncate mt-1">{{ conversation.lastMessage }}</p>
+              <span v-if="conversation.unread" class="inline-block mt-1 px-2 py-0.5 bg-teal-600 text-white text-xs rounded-full">
+                {{ conversation.unread }} new
+              </span>
             </div>
           </div>
         </div>
-        <div v-else class="text-center text-gray-500 py-8">
-          Select a therapist to start chatting
+      </div>
+    </div>
+
+    <!-- Chat Area -->
+    <div class="flex-1 bg-white rounded-2xl shadow-sm border border-gray-200 flex flex-col">
+      <div v-if="selectedConversation">
+        <!-- Chat Header -->
+        <div class="p-4 border-b border-gray-200 flex items-center justify-between">
+          <div class="flex items-center gap-3">
+            <div class="w-10 h-10 rounded-full bg-teal-600 text-white flex items-center justify-center text-sm font-bold">
+              {{ getCurrentConversation?.avatar }}
+            </div>
+            <div>
+              <h3 class="font-semibold text-gray-900">{{ getCurrentConversation?.name }}</h3>
+              <p class="text-sm text-gray-600">{{ getCurrentConversation?.specialty }}</p>
+            </div>
+          </div>
+          <div class="flex items-center gap-2">
+            <button class="p-2 text-gray-400 hover:text-teal-600 transition-colors">
+              <Phone class="w-5 h-5" />
+            </button>
+            <button class="p-2 text-gray-400 hover:text-teal-600 transition-colors">
+              <Video class="w-5 h-5" />
+            </button>
+            <button class="p-2 text-gray-400 hover:text-teal-600 transition-colors">
+              <MoreVertical class="w-5 h-5" />
+            </button>
+          </div>
         </div>
-        <div v-if="selectedTherapistId" class="flex space-x-2">
-          <input 
-            v-model="newMessage" 
-            placeholder="Type your message..." 
-            class="flex-1 p-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-teal-500 focus:border-teal-500"
-          />
-          <button 
-            @click="sendMessage" 
-            :disabled="!newMessage.trim()"
-            class="bg-teal-600 text-white py-2 px-4 rounded-xl hover:bg-teal-700 transition-colors disabled:bg-gray-300 disabled:cursor-not-allowed"
+
+        <!-- Messages -->
+        <div ref="messagesContainer" class="flex-1 overflow-y-auto p-4 space-y-4">
+          <div
+            v-for="message in messages"
+            :key="message.id"
+            :class="[
+              'flex gap-3',
+              message.sender === 'me' ? 'flex-row-reverse' : 'flex-row'
+            ]"
           >
-            Send
-          </button>
+            <div
+              v-if="message.sender !== 'me'"
+              class="w-8 h-8 rounded-full bg-teal-600 text-white flex items-center justify-center text-xs font-bold flex-shrink-0"
+            >
+              {{ getCurrentConversation?.avatar }}
+            </div>
+            <div :class="['max-w-md', message.sender === 'me' ? 'items-end' : 'items-start']">
+              <div
+                :class="[
+                  'rounded-2xl px-4 py-2',
+                  message.sender === 'me'
+                    ? 'bg-teal-600 text-white'
+                    : 'bg-gray-100 text-gray-900'
+                ]"
+              >
+                <p class="text-sm">{{ message.text }}</p>
+              </div>
+              <span class="text-xs text-gray-500 mt-1 block">{{ message.time }}</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Message Input -->
+        <div class="p-4 border-t border-gray-200">
+          <div class="flex items-end gap-2">
+            <button class="p-2 text-gray-400 hover:text-teal-600 transition-colors">
+              <Paperclip class="w-5 h-5" />
+            </button>
+            <div class="flex-1 relative">
+              <textarea
+                v-model="newMessage"
+                @keydown.enter.prevent="sendMessage"
+                placeholder="Type your message..."
+                rows="1"
+                class="w-full px-4 py-2 border border-gray-300 rounded-xl focus:ring-2 focus:ring-teal-500 focus:border-transparent resize-none"
+              ></textarea>
+            </div>
+            <button
+              @click="sendMessage"
+              :disabled="!newMessage.trim()"
+              :class="[
+                'p-2 rounded-xl transition-colors',
+                newMessage.trim()
+                  ? 'bg-teal-600 text-white hover:bg-teal-700'
+                  : 'bg-gray-200 text-gray-400 cursor-not-allowed'
+              ]"
+            >
+              <Send class="w-5 h-5" />
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Empty State -->
+      <div v-else class="flex-1 flex items-center justify-center">
+        <div class="text-center">
+          <MessageCircle class="w-16 h-16 text-gray-300 mx-auto mb-4" />
+          <h3 class="text-lg font-semibold text-gray-900 mb-2">No conversation selected</h3>
+          <p class="text-gray-600">Choose a conversation to start messaging</p>
         </div>
       </div>
     </div>
@@ -57,68 +148,119 @@
 </template>
 
 <script setup lang="ts">
-import { ref } from 'vue'
-import { MessageCircle } from 'lucide-vue-next'
+import { ref, computed, nextTick, watch } from 'vue'
+import { Search, Phone, Video, MoreVertical, MessageCircle, Paperclip, Send } from 'lucide-vue-next'
 
-const selectedTherapistId = ref<number | null>(null)
+const searchQuery = ref('')
+const selectedConversation = ref(1)
 const newMessage = ref('')
+const messagesContainer = ref<HTMLElement | null>(null)
 
-// Mock therapists
-const therapists = ref([
-  { id: 1, name: 'Dr. Emily Chen', avatar: '/api/placeholder/40/40', lastMessage: 'Looking forward to our session!', unreadCount: 2 },
-  { id: 2, name: 'Dr. Michael Rodriguez', avatar: '/api/placeholder/40/40', lastMessage: 'Please review the group session notes.', unreadCount: 0 },
-  { id: 3, name: 'Dr. Aisha Mwangi', avatar: '/api/placeholder/40/40', lastMessage: 'How are you feeling today?', unreadCount: 1 }
+const conversations = ref([
+  {
+    id: 1,
+    name: 'Dr. Sarah Chen',
+    specialty: 'Clinical Psychologist',
+    avatar: 'SC',
+    lastMessage: 'Looking forward to our session tomorrow!',
+    time: '10:30 AM',
+    unread: 2
+  },
+  {
+    id: 2,
+    name: 'Dr. Michael Roberts',
+    specialty: 'Behavioral Therapist',
+    avatar: 'MR',
+    lastMessage: 'Great progress on your anxiety management',
+    time: 'Yesterday',
+    unread: 0
+  },
+  {
+    id: 3,
+    name: 'Dr. Emily Davis',
+    specialty: 'Marriage Counselor',
+    avatar: 'ED',
+    lastMessage: 'Remember to practice the communication exercises',
+    time: '2 days ago',
+    unread: 1
+  }
 ])
 
-// Mock messages
 const messages = ref([
-  { id: 1, text: 'Hi, how are you feeling today?', isSent: false, time: new Date('2025-09-26T14:00:00') },
-  { id: 2, text: 'I’m feeling a bit anxious but managing.', isSent: true, time: new Date('2025-09-26T14:05:00') },
-  { id: 3, text: 'Let’s discuss some coping strategies in our next session.', isSent: false, time: new Date('2025-09-26T14:10:00') }
+  {
+    id: 1,
+    sender: 'therapist',
+    text: 'Hi! How have you been feeling this week?',
+    time: '10:15 AM'
+  },
+  {
+    id: 2,
+    sender: 'me',
+    text: 'Hi Dr. Chen! I\'ve been doing better. The breathing exercises are really helping.',
+    time: '10:18 AM'
+  },
+  {
+    id: 3,
+    sender: 'therapist',
+    text: 'That\'s wonderful to hear! Have you been practicing them daily as we discussed?',
+    time: '10:20 AM'
+  },
+  {
+    id: 4,
+    sender: 'me',
+    text: 'Yes, every morning and whenever I feel anxious. It\'s made a big difference.',
+    time: '10:22 AM'
+  },
+  {
+    id: 5,
+    sender: 'therapist',
+    text: 'Excellent! Keep up the great work. Looking forward to our session tomorrow!',
+    time: '10:30 AM'
+  }
 ])
 
-const selectTherapist = (id: number) => {
-  selectedTherapistId.value = id
+const filteredConversations = computed(() => {
+  if (!searchQuery.value) return conversations.value
+  return conversations.value.filter(c =>
+    c.name.toLowerCase().includes(searchQuery.value.toLowerCase())
+  )
+})
+
+const getCurrentConversation = computed(() => {
+  return conversations.value.find(c => c.id === selectedConversation.value)
+})
+
+const selectConversation = (id: number) => {
+  selectedConversation.value = id
+  // Mark as read
+  const conv = conversations.value.find(c => c.id === id)
+  if (conv) conv.unread = 0
 }
 
 const sendMessage = () => {
   if (!newMessage.value.trim()) return
+
   messages.value.push({
     id: messages.value.length + 1,
+    sender: 'me',
     text: newMessage.value,
-    isSent: true,
-    time: new Date()
+    time: new Date().toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' })
   })
+
   newMessage.value = ''
-}
 
-const formatTime = (date: Date) => {
-  return date.toLocaleTimeString('en-US', { 
-    hour: 'numeric', 
-    minute: '2-digit',
-    hour12: true,
-    timeZone: 'Africa/Nairobi'
+  nextTick(() => {
+    if (messagesContainer.value) {
+      messagesContainer.value.scrollTop = messagesContainer.value.scrollHeight
+    }
   })
 }
+
+watch(selectedConversation, () => {
+  nextTick(() => {
+    if (messagesContainer.value) {
+      messagesContainer.value.scrollTop = messagesContainer.value.scrollHeight
+    }
+  })
+})
 </script>
-
-<style scoped>
-/* Custom scrollbar for chat */
-::-webkit-scrollbar {
-  width: 4px;
-}
-
-::-webkit-scrollbar-track {
-  background: #f1f5f9;
-  border-radius: 10px;
-}
-
-::-webkit-scrollbar-thumb {
-  background: #0d9488;
-  border-radius: 10px;
-}
-
-::-webkit-scrollbar-thumb:hover {
-  background: #0f766e;
-}
-</style>

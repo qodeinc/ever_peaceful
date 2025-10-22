@@ -1,10 +1,12 @@
+<!-- src/views/admin/AdminLayout.vue -->
 <template>
-  <div class="min-h-screen bg-gradient-to-br from-teal-50/30 via-white to-cyan-50/30">
+  <div class="min-h-screen bg-gradient-to-br from-teal-50/30 via-white to-emerald-50/30">
     <!-- Sidebar -->
     <div 
       :class="[
         'fixed inset-y-0 left-0 z-50 bg-white shadow-xl border-r border-gray-200 transition-all duration-300',
-        sidebarCollapsed ? 'w-16' : 'w-64'
+        sidebarCollapsed ? 'w-16' : 'w-64',
+        isMobileMenuOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'
       ]"
     >
       <!-- Sidebar Header -->
@@ -30,18 +32,17 @@
           <ChevronRight v-else class="w-5 h-5" />
         </button>
       </div>
-
       <!-- Navigation - Scrollable -->
       <nav class="mt-6 px-2 h-[calc(100vh-5rem)] overflow-y-auto">
         <div class="space-y-2">
           <button
-            v-for="item in navItems"
+            v-for="item in adminNavItems"
             :key="item.name"
             @click="setActiveComponent(item.name)"
             :title="sidebarCollapsed ? item.title : ''"
             :class="[
               'w-full flex items-center px-3 py-3 text-left text-sm font-medium rounded-xl border border-transparent transition-all duration-200',
-              activeComponent === item.name ? 'bg-teal-100 text-teal-700 border-teal-200' : 'text-gray-600 hover:bg-gray-50'
+              activeComponent === item.name ? 'bg-teal-100 text-teal-700 border-teal-200' : 'text-gray-600 hover:bg-teal-50'
             ]"
           >
             <component :is="item.icon" class="w-5 h-5 flex-shrink-0" :class="sidebarCollapsed ? 'mx-auto' : 'mr-3'" />
@@ -51,45 +52,6 @@
             </span>
           </button>
         </div>
-
-        <!-- System Status -->
-        <div v-if="!sidebarCollapsed" class="mt-8 p-4 bg-gray-50 rounded-xl">
-          <h3 class="text-sm font-medium text-gray-900 mb-3">System Status</h3>
-          <div class="space-y-2">
-            <div class="flex items-center justify-between text-xs">
-              <span class="text-gray-600">Server Health</span>
-              <div class="flex items-center space-x-1">
-                <div class="w-2 h-2 bg-green-500 rounded-full"></div>
-                <span class="text-green-600 font-medium">Healthy</span>
-              </div>
-            </div>
-            <div class="flex items-center justify-between text-xs">
-              <span class="text-gray-600">Active Users</span>
-              <span class="font-medium text-gray-900">1,247</span>
-            </div>
-            <div class="flex items-center justify-between text-xs">
-              <span class="text-gray-600">Live Sessions</span>
-              <span class="font-medium text-gray-900">34</span>
-            </div>
-          </div>
-        </div>
-
-        <!-- Quick Actions -->
-        <div v-if="!sidebarCollapsed" class="mt-6 p-4 bg-gradient-to-r from-teal-100 to-cyan-100 rounded-xl">
-          <h3 class="text-sm font-medium text-gray-900 mb-3">Quick Actions</h3>
-          <div class="space-y-2">
-            <button class="w-full text-left text-xs text-teal-700 hover:text-teal-900 p-2 rounded-lg hover:bg-white/50 transition-colors">
-              Send Platform Announcement
-            </button>
-            <button class="w-full text-left text-xs text-teal-700 hover:text-teal-900 p-2 rounded-lg hover:bg-white/50 transition-colors">
-              Export Monthly Report
-            </button>
-            <button class="w-full text-left text-xs text-teal-700 hover:text-teal-900 p-2 rounded-lg hover:bg-white/50 transition-colors">
-              Schedule Maintenance
-            </button>
-          </div>
-        </div>
-
         <!-- Logout Button -->
         <button
           v-if="!sidebarCollapsed"
@@ -109,7 +71,6 @@
         </button>
       </nav>
     </div>
-
     <!-- Main Content Area -->
     <div :class="['transition-all duration-300', sidebarCollapsed ? 'ml-16' : 'ml-64']">
       <!-- Top Navigation Bar -->
@@ -118,7 +79,7 @@
           <div class="flex items-center justify-between">
             <div class="flex items-center space-x-4">
               <button 
-                @click="sidebarCollapsed = !sidebarCollapsed"
+                @click="isMobileMenuOpen = !isMobileMenuOpen"
                 class="lg:hidden p-2 text-gray-400 hover:text-teal-600 transition-colors"
               >
                 <Menu class="w-6 h-6" />
@@ -131,18 +92,7 @@
             </div>
             
             <div class="flex items-center space-x-4">
-              <!-- Time Range Selector (First) -->
-              <select 
-                v-model="selectedTimeframe" 
-                class="px-3 py-2 bg-white border border-gray-200 rounded-xl text-sm font-medium text-gray-700 focus:ring-2 focus:ring-teal-500 focus:border-teal-500"
-              >
-                <option value="today">Today</option>
-                <option value="week">This Week</option>
-                <option value="month">This Month</option>
-                <option value="quarter">This Quarter</option>
-              </select>
-
-              <!-- Notifications (Second) -->
+              <!-- Notifications -->
               <div class="relative">
                 <button 
                   @click="toggleNotificationsDropdown"
@@ -178,8 +128,7 @@
                   </div>
                 </div>
               </div>
-
-              <!-- Profile Dropdown with Avatar (Last) -->
+              <!-- Profile Dropdown -->
               <div class="relative">
                 <button 
                   @click="toggleProfileDropdown"
@@ -206,12 +155,6 @@
                     Profile Settings
                   </button>
                   <button
-                    @click="setActiveComponent('account')"
-                    class="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-teal-50 hover:text-teal-700"
-                  >
-                    Account
-                  </button>
-                  <button
                     @click="handleLogout"
                     class="w-full text-left px-4 py-2 text-sm text-red-600 hover:bg-red-50 hover:text-red-700"
                   >
@@ -223,14 +166,12 @@
           </div>
         </div>
       </header>
-
       <!-- Content Area with Transition -->
       <main class="p-6">
+        <!-- Dynamic component rendering -->
         <transition
           name="dashboard-fade"
           mode="out-in"
-          @enter="onEnter"
-          @leave="onLeave"
         >
           <component :is="componentMap[activeComponent]" :key="activeComponent" />
         </transition>
@@ -240,167 +181,124 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, defineAsyncComponent } from 'vue'
-import { useRouter } from 'vue-router'
+import { ref, computed, watch } from 'vue'
+import { useRouter, useRoute } from 'vue-router'
 import { 
-  Shield, Bell, BarChart3, Users, Heart, Calendar, Settings,
-  BookOpen, MessageCircle, FileText, Menu, ChevronLeft, ChevronRight, LogOut
+  Shield, Bell, Home, Users, DollarSign, BookOpen, Settings, Heart,
+  Menu, ChevronLeft, ChevronRight, LogOut 
 } from 'lucide-vue-next'
+import { logout } from '../../utils/auth'
+import { defineAsyncComponent } from 'vue'
 
-// Async components for dynamic rendering (based on folder tree)
+// Async components for dynamic rendering
 const componentMap = {
-  overview: defineAsyncComponent(() => import('../../views/dashboard/AdminDashboard.vue')),
-  users: defineAsyncComponent(() => import('../../views/dashboard/pages/UserManagement.vue')),
-  therapists: defineAsyncComponent(() => import('../../views/dashboard/pages/TherapistManagement.vue')),
-  sessions: defineAsyncComponent(() => import('../../views/dashboard/pages/SessionManagement.vue')),
-  content: defineAsyncComponent(() => import('../../views/dashboard/pages/ContentManagement.vue')),
-  support: defineAsyncComponent(() => import('../../views/dashboard/pages/SupportTickets.vue')),
-  reports: defineAsyncComponent(() => import('../../views/dashboard/pages/ReportsAnalytics.vue')),
-  system: defineAsyncComponent(() => import('../../views/dashboard/pages/SystemSettings.vue'))
-  //profile: defineAsyncComponent(() => import('../../views/Profile.vue')),
-  //account: defineAsyncComponent(() => import('../../views/Account.vue'))
+  dashboard: defineAsyncComponent(() => import('../../views/dashboard/AdminDashboard.vue')),
+  users: defineAsyncComponent(() => import('../../views/dashboard/pages/User.vue')),
+  therapists: defineAsyncComponent(() => import('../../views/dashboard/pages/Therapist.vue')),
+  billing: defineAsyncComponent(() => import('../../views/dashboard/pages/Billing.vue')),
+  resources: defineAsyncComponent(() => import('../../views/dashboard/pages/Resources.vue')),
+  settings: defineAsyncComponent(() => import('../../views/dashboard/pages/Settings.vue')),
+// profile: defineAsyncComponent(() => import('../../views/dashboard/pages/Profile.vue')),
+  
 }
 
 const router = useRouter()
+const route = useRoute()
 
 // Reactive state
 const sidebarCollapsed = ref(false)
-const notifications = ref(7)
-const selectedTimeframe = ref('month')
-const showProfileDropdown = ref(false)
+const isMobileMenuOpen = ref(false)
+const notifications = ref(3)
 const showNotificationsDropdown = ref(false)
-const activeComponent = ref('overview')
-
-// Sidebar indicators
-const pendingUsers = ref(12)
-const pendingTherapists = ref(3)
-const urgentTickets = ref(5)
-const systemAlerts = ref(2)
+const showProfileDropdown = ref(false)
+const activeComponent = ref('dashboard')
 
 // Notification list
 const notificationList = ref([
-  {
-    id: 1,
-    title: 'New therapist application received',
-    time: '5 min ago'
-  },
-  {
-    id: 2,
-    title: 'User reported an issue with payment',
-    time: '15 min ago'
-  },
-  {
-    id: 3,
-    title: 'System maintenance scheduled',
-    time: '1 hour ago'
-  },
-  {
-    id: 4,
-    title: 'High server load detected',
-    time: '2 hours ago'
-  }
+  { id: 1, title: 'New user registered', time: '10 minutes ago' },
+  { id: 2, title: 'Therapist account approved', time: '2 hours ago' },
+  { id: 3, title: 'Billing report generated', time: '1 day ago' }
 ])
 
 // Navigation items
-const navItems = ref([
-  { name: 'overview', title: 'Overview & Analytics', icon: BarChart3 },
-  { name: 'users', title: 'User Management', icon: Users, badge: pendingUsers.value, badgeClass: 'bg-blue-100 text-blue-600' },
-  { name: 'therapists', title: 'Therapist Panel', icon: Heart, badge: pendingTherapists.value, badgeClass: 'bg-emerald-100 text-emerald-600' },
-  { name: 'sessions', title: 'Sessions & Bookings', icon: Calendar },
-  { name: 'content', title: 'Content Management', icon: BookOpen },
-  { name: 'support', title: 'Support & Tickets', icon: MessageCircle, badge: urgentTickets.value, badgeClass: 'bg-red-100 text-red-600' },
-  { name: 'reports', title: 'Reports & Exports', icon: FileText },
-  { name: 'system', title: 'System Settings', icon: Settings, badge: systemAlerts.value, badgeClass: 'bg-orange-100 text-orange-600' },
+const adminNavItems = ref([
+  { name: 'dashboard', title: 'Dashboard', icon: Home },
+  { name: 'users', title: 'Users', icon: Users, badge: 2847, badgeClass: 'bg-blue-100 text-blue-600' },
+  { name: 'therapists', title: 'Therapists', icon: Heart, badge: 156, badgeClass: 'bg-emerald-100 text-emerald-600' },
+  { name: 'billing', title: 'Billing', icon: DollarSign, badge: 'KSh 4.7M', badgeClass: 'bg-green-100 text-green-600' },
+  { name: 'resources', title: 'Resources', icon: BookOpen },
+  { name: 'settings', title: 'Settings', icon: Settings }
 ])
 
 // Section configuration
 const sectionTitles: Record<string, string> = {
-  overview: 'Dashboard Overview',
+  dashboard: 'Dashboard',
   users: 'User Management',
   therapists: 'Therapist Management',
-  sessions: 'Session Management',
-  content: 'Content Management',
-  support: 'Support & Tickets',
-  reports: 'Reports & Analytics',
-  system: 'System Settings',
-  profile: 'Profile Settings',
-  account: 'Account Settings'
+  billing: 'Billing & Revenue',
+  resources: 'Resource Library',
+  settings: 'Platform Settings',
+  profile: 'Profile'
 }
 
 const sectionDescriptions: Record<string, string> = {
-  overview: 'Platform analytics and key performance metrics',
-  users: 'Manage user accounts, permissions, and activity',
-  therapists: 'Handle therapist applications and certifications',
-  sessions: 'Monitor and manage therapy sessions',
-  content: 'Manage resources, articles, and educational content',
-  support: 'Handle support tickets and user inquiries',
-  reports: 'Generate reports and export data',
-  system: 'Configure system settings and maintenance',
-  profile: 'Manage your profile settings',
-  account: 'Manage your account details'
+  dashboard: 'Platform overview and key metrics',
+  users: 'Manage user accounts and permissions',
+  therapists: 'Approve and manage therapist profiles',
+  billing: 'View revenue reports and manage payments',
+  resources: 'Curate and manage therapy resources',
+  settings: 'Configure platform settings and integrations',
+  profile: 'Update your admin profile'
 }
 
-// Compute current section title and description based on active component
+// Compute current section title and description
 const currentSectionTitle = computed(() => {
-  return sectionTitles[activeComponent.value] || 'Dashboard Overview'
+  return sectionTitles[activeComponent.value] || 'Dashboard'
 })
 
 const currentSectionDescription = computed(() => {
-  return sectionDescriptions[activeComponent.value] || 'Platform analytics and key performance metrics'
+  return sectionDescriptions[activeComponent.value] || 'Platform overview'
 })
 
 // Admin profile
 const adminProfile = ref({
-  name: 'Sarah Wilson',
-  email: 'sarah.wilson@mindwell.com'
+  name: 'Admin User',
+  email: 'admin@mindwell.co.ke'
 })
 
-// Compute initials from admin name
+// Compute initials
 const adminInitials = computed(() => {
   const names = adminProfile.value.name.trim().split(' ')
   return names.length > 1
     ? `${names[0][0]}${names[names.length - 1][0]}`
-    : names[0][0] || 'SW'
+    : names[0][0] || 'AU'
 })
 
-// Set active component
+// Methods
 const setActiveComponent = (name: string) => {
   activeComponent.value = name
-  showProfileDropdown.value = false // Close profile dropdown if open
+  showProfileDropdown.value = false
+  isMobileMenuOpen.value = false
 }
 
-// Transition hooks (aligned with App.vue)
-const onEnter = () => {
-  // Handled in App.vue
-}
-
-const onLeave = () => {
-  // Handled in App.vue
-}
-
-// Toggle profile dropdown
-const toggleProfileDropdown = () => {
-  showProfileDropdown.value = !showProfileDropdown.value
-  showNotificationsDropdown.value = false // Close notifications dropdown if open
-}
-
-// Toggle notifications dropdown
 const toggleNotificationsDropdown = () => {
   showNotificationsDropdown.value = !showNotificationsDropdown.value
-  showProfileDropdown.value = false // Close profile dropdown if open
+  showProfileDropdown.value = false
 }
 
-// Handle notification click
+const toggleProfileDropdown = () => {
+  showProfileDropdown.value = !showProfileDropdown.value
+  showNotificationsDropdown.value = false
+}
+
 const handleNotificationClick = (id: number) => {
   showNotificationsDropdown.value = false
   console.log(`Notification ${id} clicked`)
-  // Add navigation or action logic here if needed
 }
 
-// Handle logout
-const handleLogout = () => {
+const handleLogout = async () => {
   showProfileDropdown.value = false
-  router.push('/login')
+  await logout(router)
 }
 </script>
 
@@ -417,8 +315,17 @@ const handleLogout = () => {
   }
 }
 
+@keyframes fadeInUp {
+  from { opacity: 0; transform: translateY(20px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
 .animate-fadeInRight {
   animation: fadeInRight 0.6s ease-out;
+}
+
+.animate-fadeInUp {
+  animation: fadeInUp 0.6s ease-out;
 }
 
 /* Sidebar styling */
@@ -435,7 +342,7 @@ main {
   animation: fadeInRight 0.6s ease-out;
 }
 
-/* Enhanced button styling */
+/* Button styling */
 button {
   position: relative;
   overflow: hidden;
@@ -467,7 +374,7 @@ button:hover::before {
 }
 
 ::-webkit-scrollbar-thumb {
-  background: #14b8a6;
+  background: #0d9488;
   border-radius: 10px;
 }
 
@@ -507,7 +414,7 @@ button:hover::before {
   }
 }
 
-/* Transition styles from App.vue */
+/* Transition styles */
 .dashboard-fade-enter-active {
   transition: opacity 0.6s ease;
 }

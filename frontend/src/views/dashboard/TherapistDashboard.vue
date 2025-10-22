@@ -7,59 +7,63 @@
           <div>
             <h2 class="text-3xl font-bold mb-2">Good {{ timeOfDay }}, {{ therapistProfile.title }} {{ therapistProfile.lastName }}! 👨‍⚕️</h2>
             <p class="text-emerald-100 text-lg">
-              You have {{ todaysStats.sessions }} sessions scheduled today. 
-              {{ todaysStats.sessions > 0 ? "Ready to make a difference?" : "Enjoy your lighter day!" }}
+              You have {{ overviewStats.sessions }} sessions scheduled today. 
+              {{ overviewStats.sessions > 0 ? "Ready to make a difference?" : "Enjoy your lighter day!" }}
             </p>
           </div>
-          <div class="hidden lg:block">
-            <div class="w-24 h-24 bg-white/20 rounded-full flex items-center justify-center animate-pulse">
-              <Users class="w-12 h-12 text-white" />
-            </div>
+          <div class="w-16 h-16 bg-white/20 rounded-full flex items-center justify-center">
+            <div class="text-2xl font-bold text-white">{{ therapistInitials }}</div>
           </div>
         </div>
       </div>
 
-      <!-- Quick Stats -->
-      <div class="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
-        <div class="bg-white rounded-2xl p-6 shadow-lg border border-gray-100">
-          <div class="flex items-center justify-between">
-            <div>
-              <p class="text-sm text-gray-600">Today's Sessions</p>
-              <p class="text-2xl font-bold text-gray-900">{{ todaysStats.sessions }}</p>
-              <p class="text-xs mt-1" :class="todaysStats.sessionsChange >= 0 ? 'text-green-600' : 'text-red-600'">
-                {{ todaysStats.sessionsChange >= 0 ? '↑' : '↓' }} {{ Math.abs(todaysStats.sessionsChange) }} vs yesterday
-              </p>
-            </div>
-            <div class="w-12 h-12 bg-teal-100 rounded-2xl flex items-center justify-center">
-              <Calendar class="w-6 h-6 text-teal-600" />
-            </div>
-          </div>
-        </div>
-        
+      <!-- Overview Stats -->
+      <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
         <div class="bg-white rounded-2xl p-6 shadow-lg border border-gray-100">
           <div class="flex items-center justify-between">
             <div>
               <p class="text-sm text-gray-600">Active Clients</p>
-              <p class="text-2xl font-bold text-gray-900">{{ todaysStats.activeClients }}</p>
-              <p class="text-xs text-green-600 mt-1">↑ {{ todaysStats.newClients }} new this month</p>
+              <p class="text-2xl font-bold text-gray-900">{{ overviewStats.activeClients }}</p>
+              <p class="text-xs text-green-600 mt-1">+{{ overviewStats.newClients }} new</p>
             </div>
             <div class="w-12 h-12 bg-emerald-100 rounded-2xl flex items-center justify-center">
               <Users class="w-6 h-6 text-emerald-600" />
             </div>
           </div>
         </div>
-        
+        <div class="bg-white rounded-2xl p-6 shadow-lg border border-gray-100">
+          <div class="flex items-center justify-between">
+            <div>
+              <p class="text-sm text-gray-600">Pending Tasks</p>
+              <p class="text-2xl font-bold text-gray-900">{{ overviewStats.tasks }}</p>
+              <p class="text-xs text-orange-600 mt-1">{{ overviewStats.urgentTasks }} urgent</p>
+            </div>
+            <div class="w-12 h-12 bg-orange-100 rounded-2xl flex items-center justify-center">
+              <ClipboardList class="w-6 h-6 text-orange-600" />
+            </div>
+          </div>
+        </div>
+        <div class="bg-white rounded-2xl p-6 shadow-lg border border-gray-100">
+          <div class="flex items-center justify-between">
+            <div>
+              <p class="text-sm text-gray-600">Unread Messages</p>
+              <p class="text-2xl font-bold text-gray-900">{{ overviewStats.messages }}</p>
+              <p class="text-xs text-blue-600 mt-1">In Messaging</p>
+            </div>
+            <div class="w-12 h-12 bg-blue-100 rounded-2xl flex items-center justify-center">
+              <MessageCircle class="w-6 h-6 text-blue-600" />
+            </div>
+          </div>
+        </div>
         <div class="bg-white rounded-2xl p-6 shadow-lg border border-gray-100">
           <div class="flex items-center justify-between">
             <div>
               <p class="text-sm text-gray-600">Avg. Rating</p>
-              <p class="text-2xl font-bold text-gray-900">{{ todaysStats.rating.toFixed(1) }}</p>
+              <p class="text-2xl font-bold text-gray-900">{{ overviewStats.rating.toFixed(1) }}</p>
               <div class="flex items-center mt-1">
-                <div class="flex">
-                  <Star v-for="n in 5" :key="n" 
-                        class="w-3 h-3" 
-                        :class="n <= todaysStats.rating ? 'text-yellow-400 fill-current' : 'text-gray-300'" />
-                </div>
+                <Star v-for="n in 5" :key="n" 
+                      class="w-3 h-3" 
+                      :class="n <= overviewStats.rating ? 'text-yellow-400 fill-current' : 'text-gray-300'" />
               </div>
             </div>
             <div class="w-12 h-12 bg-yellow-100 rounded-2xl flex items-center justify-center">
@@ -67,143 +71,140 @@
             </div>
           </div>
         </div>
-        
-        <div class="bg-white rounded-2xl p-6 shadow-lg border border-gray-100">
-          <div class="flex items-center justify-between">
-            <div>
-              <p class="text-sm text-gray-600">Unread Messages</p>
-              <p class="text-2xl font-bold text-gray-900">{{ todaysStats.messages }}</p>
-              <p class="text-xs text-blue-600 mt-1">{{ todaysStats.urgentMessages }} urgent</p>
-            </div>
-            <div class="w-12 h-12 bg-purple-100 rounded-2xl flex items-center justify-center">
-              <MessageCircle class="w-6 h-6 text-purple-600" />
-            </div>
-          </div>
-        </div>
       </div>
 
-      <!-- Main Content -->
+      <!-- Main Content Grid -->
       <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
-        <!-- Left Column -->
+        <!-- Primary Column: Schedule & Updates -->
         <div class="lg:col-span-2 space-y-6">
-          <!-- Today's Schedule -->
+          <!-- Integrated Schedule & Tasks -->
           <div class="bg-white rounded-2xl p-6 shadow-lg border border-gray-100">
             <div class="flex items-center justify-between mb-6">
-              <h3 class="text-xl font-bold text-gray-900">Today's Schedule</h3>
-              <div class="flex space-x-2">
-                <button @click="refreshSchedule" class="p-2 text-gray-400 hover:text-emerald-600 transition-colors">
-                  <RefreshCw class="w-4 h-4" />
+              <h3 class="text-xl font-bold text-gray-900">Today's Schedule & Tasks</h3>
+              <div class="flex space-x-3">
+                <button @click="setActiveComponent('calendar')" class="text-emerald-600 hover:text-emerald-700 text-sm font-medium">
+                  Full Calendar
                 </button>
-                <button @click="navigateTo('/therapist/calendar')" class="text-emerald-600 hover:text-emerald-700 font-medium text-sm">
-                  View Calendar
+                <button @click="setActiveComponent('tasks')" class="text-emerald-600 hover:text-emerald-700 text-sm font-medium">
+                  All Tasks
                 </button>
               </div>
             </div>
-            <div v-if="todaysSchedule.length > 0" class="space-y-4">
-              <div v-for="appointment in todaysSchedule" :key="appointment.id" 
-                   class="flex items-center justify-between p-4 bg-gray-50 rounded-xl hover:bg-emerald-50 transition-colors cursor-pointer"
-                   @click="viewClientDetails(appointment.client.id)">
-                <div class="flex items-center space-x-4">
-                  <img :src="appointment.client.avatar" :alt="appointment.client.name" 
-                       class="w-12 h-12 rounded-full border-2 border-emerald-200">
-                  <div>
-                    <h4 class="font-semibold text-gray-900">{{ appointment.client.name }}</h4>
-                    <p class="text-sm text-gray-600">{{ appointment.type }}</p>
-                    <p class="text-xs text-gray-500">Session #{{ appointment.sessionNumber }}</p>
+            <div class="space-y-4">
+              <!-- Upcoming Sessions -->
+              <div v-if="todaysSchedule.length > 0" class="border-b border-gray-100 pb-4">
+                <h4 class="font-semibold text-gray-900 mb-2">Upcoming Sessions</h4>
+                <div v-for="appointment in todaysSchedule" :key="appointment.id" 
+                     class="flex items-center justify-between p-3 bg-gray-50 rounded-lg hover:bg-emerald-50 transition-colors cursor-pointer"
+                     @click="viewClientDetails(appointment.client.id)">
+                  <div class="flex items-center space-x-3 flex-1">
+                    <div class="w-10 h-10 bg-emerald-600 rounded-full flex items-center justify-center text-white font-medium text-sm">
+                      {{ appointment.client.initials }}
+                    </div>
+                    <div>
+                      <h5 class="font-medium text-gray-900">{{ appointment.client.name }}</h5>
+                      <p class="text-sm text-gray-600">{{ appointment.type }}</p>
+                    </div>
                   </div>
-                </div>
-                <div class="text-right">
-                  <p class="font-medium text-gray-900">{{ formatTime(appointment.startTime) }}</p>
-                  <span class="px-3 py-1 text-xs rounded-full font-medium"
-                        :class="getStatusClass(appointment.status)">
-                    {{ appointment.status }}
-                  </span>
-                  <div class="flex items-center mt-1 space-x-1">
-                    <button v-if="appointment.status === 'upcoming'" 
-                            @click.stop="startSession(appointment.id)"
-                            class="px-2 py-1 text-xs bg-emerald-100 text-emerald-700 rounded hover:bg-emerald-200">
-                      Start
-                    </button>
-                    <button @click.stop="viewNotes(appointment.id)"
-                            class="px-2 py-1 text-xs bg-blue-100 text-blue-700 rounded hover:bg-blue-200">
-                      Notes
-                    </button>
+                  <div class="text-right">
+                    <p class="font-medium text-gray-900 text-sm">{{ formatTime(appointment.startTime) }}</p>
+                    <span class="px-2 py-1 text-xs rounded-full font-medium mt-1 block"
+                          :class="getStatusClass(appointment.status)">
+                      {{ appointment.status }}
+                    </span>
                   </div>
                 </div>
               </div>
-            </div>
-            <div v-else class="text-center py-8">
-              <Calendar class="w-12 h-12 text-gray-300 mx-auto mb-3" />
-              <p class="text-gray-500">No sessions scheduled for today</p>
-              <p class="text-sm text-gray-400 mt-1">Enjoy your day off!</p>
+
+              <!-- Pending Tasks -->
+              <div v-if="pendingTasks.length > 0" class="pt-4">
+                <h4 class="font-semibold text-gray-900 mb-2">Pending Tasks</h4>
+                <div v-for="task in pendingTasks" :key="task.id" 
+                     class="flex items-start justify-between p-3 bg-orange-50 rounded-lg hover:bg-orange-100 transition-colors cursor-pointer"
+                     @click="setActiveComponent('tasks')">
+                  <div class="flex items-center space-x-3 flex-1">
+                    <div class="w-8 h-8 bg-orange-600 rounded-full flex items-center justify-center text-white text-xs font-medium">
+                      {{ task.initials }}
+                    </div>
+                    <div>
+                      <h5 class="font-medium text-gray-900 text-sm">{{ task.title }}</h5>
+                      <p class="text-xs text-gray-600">{{ task.description }}</p>
+                    </div>
+                  </div>
+                  <div class="text-right">
+                    <p class="text-xs text-gray-500">{{ task.due }}</p>
+                    <span class="px-2 py-1 text-xs bg-red-100 text-red-700 rounded-full mt-1 block">
+                      Urgent
+                    </span>
+                  </div>
+                </div>
+              </div>
+
+              <div v-if="todaysSchedule.length === 0 && pendingTasks.length === 0" class="text-center py-8">
+                <Calendar class="w-12 h-12 text-gray-300 mx-auto mb-3" />
+                <p class="text-gray-500">Clear schedule</p>
+                <p class="text-sm text-gray-400 mt-1">Time for reflection or prep</p>
+              </div>
             </div>
           </div>
 
-          <!-- Recent Client Updates -->
+          <!-- Recent Activity Feed -->
           <div class="bg-white rounded-2xl p-6 shadow-lg border border-gray-100">
-            <h3 class="text-xl font-bold text-gray-900 mb-6">Recent Client Updates</h3>
-            <div v-if="clientUpdates.length > 0" class="space-y-4">
-              <div v-for="update in clientUpdates" :key="update.id" 
-                   class="flex items-start space-x-4 p-4 hover:bg-gray-50 rounded-xl transition-colors cursor-pointer"
-                   @click="viewClientDetails(update.clientId)">
-                <img :src="update.avatar" :alt="update.clientName" 
-                     class="w-10 h-10 rounded-full border-2 border-gray-200 flex-shrink-0">
+            <h3 class="text-xl font-bold text-gray-900 mb-6">Recent Activity</h3>
+            <div class="space-y-4 max-h-80 overflow-y-auto">
+              <div v-for="activity in recentActivity" :key="activity.id" 
+                   class="flex items-start space-x-3 p-3 hover:bg-gray-50 rounded-lg transition-colors cursor-pointer"
+                   @click="handleActivityClick(activity.type, activity.id)">
+                <div class="w-8 h-8 bg-emerald-600 rounded-full flex items-center justify-center text-white text-xs font-medium mt-0.5">
+                  {{ activity.initials }}
+                </div>
                 <div class="flex-1">
                   <div class="flex items-center justify-between">
-                    <h4 class="font-medium text-gray-900">{{ update.clientName }}</h4>
-                    <span class="text-xs text-gray-500">{{ update.time }}</span>
+                    <h4 class="font-medium text-gray-900 text-sm">{{ activity.title }}</h4>
+                    <span class="text-xs text-gray-500">{{ activity.time }}</span>
                   </div>
-                  <p class="text-sm text-gray-600 mt-1">{{ update.message }}</p>
-                  <div class="flex items-center mt-2 space-x-2">
-                    <span class="px-2 py-1 text-xs rounded-full"
-                          :class="getPriorityClass(update.priority)">
-                      {{ update.priority }}
-                    </span>
-                    <span v-if="update.requiresResponse" 
-                          class="px-2 py-1 text-xs bg-orange-100 text-orange-700 rounded-full">
-                      Response needed
-                    </span>
+                  <p class="text-sm text-gray-600 mt-1">{{ activity.description }}</p>
+                  <div class="flex items-center mt-2 space-x-2 text-xs">
+                    <span class="px-2 py-1 bg-gray-100 text-gray-700 rounded">{{ activity.type }}</span>
+                    <span v-if="activity.unread" class="px-2 py-1 bg-blue-100 text-blue-700 rounded">Unread</span>
                   </div>
                 </div>
               </div>
-            </div>
-            <div v-else class="text-center py-8">
-              <MessageCircle class="w-12 h-12 text-gray-300 mx-auto mb-3" />
-              <p class="text-gray-500">No recent updates</p>
+              <div v-if="recentActivity.length === 0" class="text-center py-8">
+                <MessageCircle class="w-12 h-12 text-gray-300 mx-auto mb-3" />
+                <p class="text-gray-500">No recent activity</p>
+              </div>
             </div>
           </div>
         </div>
 
-        <!-- Right Column -->
+        <!-- Secondary Column: Quick Access & Alerts -->
         <div class="space-y-6">
-          <!-- Client Overview -->
+          <!-- Quick Access Links -->
           <div class="bg-white rounded-2xl p-6 shadow-lg border border-gray-100">
-            <h3 class="text-xl font-bold text-gray-900 mb-6">Client Overview</h3>
-            <div class="space-y-4">
-              <div class="text-center">
-                <div class="text-3xl font-bold text-emerald-600">{{ todaysStats.activeClients }}</div>
-                <div class="text-sm text-gray-600">Active Clients</div>
-              </div>
-              <div class="grid grid-cols-2 gap-4 text-center">
-                <div>
-                  <div class="text-xl font-bold text-teal-600">{{ clientStats.new }}</div>
-                  <div class="text-xs text-gray-600">New This Month</div>
-                </div>
-                <div>
-                  <div class="text-xl font-bold text-blue-600">{{ clientStats.continuing }}</div>
-                  <div class="text-xs text-gray-600">Continuing</div>
-                </div>
-              </div>
-              <div class="pt-4 border-t border-gray-100">
-                <div class="flex justify-between text-sm mb-2">
-                  <span class="text-gray-600">Session Completion Rate</span>
-                  <span class="font-medium">{{ clientStats.completionRate }}%</span>
-                </div>
-                <div class="w-full bg-gray-200 rounded-full h-2">
-                  <div class="bg-emerald-600 h-2 rounded-full transition-all duration-500" 
-                       :style="`width: ${clientStats.completionRate}%`"></div>
-                </div>
-              </div>
+            <h3 class="text-xl font-bold text-gray-900 mb-4">Quick Access</h3>
+            <div class="grid grid-cols-1 gap-3">
+              <button @click="setActiveComponent('clients')" 
+                      class="flex items-center space-x-3 p-3 hover:bg-gray-50 rounded-lg transition-colors w-full text-left">
+                <Users class="w-5 h-5 text-emerald-600" />
+                <span class="text-sm font-medium">Manage Clients</span>
+              </button>
+              <button @click="setActiveComponent('session-notes')" 
+                      class="flex items-center space-x-3 p-3 hover:bg-gray-50 rounded-lg transition-colors w-full text-left">
+                <FileText class="w-5 h-5 text-blue-600" />
+                <span class="text-sm font-medium">Session Notes</span>
+              </button>
+              <button @click="setActiveComponent('chat')" 
+                      class="flex items-center space-x-3 p-3 hover:bg-gray-50 rounded-lg transition-colors w-full text-left">
+                <MessageCircle class="w-5 h-5 text-purple-600" />
+                <span class="text-sm font-medium">Messaging</span>
+                <span v-if="overviewStats.messages > 0" class="ml-auto px-2 py-1 bg-purple-100 text-purple-700 text-xs rounded-full">{{ overviewStats.messages }}</span>
+              </button>
+              <button @click="setActiveComponent('resources')" 
+                      class="flex items-center space-x-3 p-3 hover:bg-gray-50 rounded-lg transition-colors w-full text-left">
+                <BookOpen class="w-5 h-5 text-teal-600" />
+                <span class="text-sm font-medium">Resources</span>
+              </button>
             </div>
           </div>
 
@@ -211,36 +212,34 @@
           <div v-if="urgentAlerts.length > 0" class="bg-white rounded-2xl p-6 shadow-lg border border-red-200">
             <h3 class="text-xl font-bold text-red-900 mb-4 flex items-center">
               <AlertTriangle class="w-5 h-5 mr-2" />
-              Urgent Alerts
+              Urgent Alerts ({{ urgentAlerts.length }})
             </h3>
-            <div class="space-y-3">
+            <div class="space-y-3 max-h-48 overflow-y-auto">
               <div v-for="alert in urgentAlerts" :key="alert.id" 
-                   class="p-3 bg-red-50 rounded-xl border border-red-100">
-                <p class="font-medium text-red-900">{{ alert.title }}</p>
+                   class="p-3 bg-red-50 rounded-lg border border-red-100">
+                <p class="font-medium text-red-900 text-sm">{{ alert.title }}</p>
                 <p class="text-sm text-red-700 mt-1">{{ alert.description }}</p>
-                <div class="flex justify-end mt-2">
-                  <button @click="handleAlert(alert.id)" 
-                          class="px-3 py-1 text-xs bg-red-600 text-white rounded hover:bg-red-700">
-                    Review
-                  </button>
-                </div>
+                <button @click="handleAlert(alert.id)" 
+                        class="mt-2 w-full px-3 py-1 text-xs bg-red-600 text-white rounded hover:bg-red-700">
+                  Review Now
+                </button>
               </div>
             </div>
           </div>
 
-          <!-- Professional Notes -->
+          <!-- Quick Notes -->
           <div class="bg-white rounded-2xl p-6 shadow-lg border border-gray-100">
-            <h3 class="text-xl font-bold text-gray-900 mb-4">Session Notes</h3>
+            <h3 class="text-xl font-bold text-gray-900 mb-4">Quick Notes</h3>
             <textarea 
-              v-model="sessionNotes"
-              placeholder="Quick notes or reminders for upcoming sessions..."
-              class="w-full p-3 border border-gray-200 rounded-xl resize-none focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500"
-              rows="4"
+              v-model="quickNotes"
+              placeholder="Jot down thoughts, reminders..."
+              class="w-full p-3 border border-gray-200 rounded-xl resize-none focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 text-sm"
+              rows="3"
             ></textarea>
-            <button @click="saveNotes" 
-                    :disabled="!sessionNotes.trim()"
-                    class="mt-3 w-full bg-emerald-600 text-white py-2 px-4 rounded-xl hover:bg-emerald-700 transition-colors font-medium disabled:bg-gray-300 disabled:cursor-not-allowed">
-              Save Notes
+            <button @click="saveQuickNotes" 
+                    :disabled="!quickNotes.trim()"
+                    class="mt-3 w-full bg-emerald-600 text-white py-2 px-4 rounded-xl hover:bg-emerald-700 transition-colors font-medium disabled:bg-gray-300 disabled:cursor-not-allowed text-sm">
+              Save
             </button>
           </div>
         </div>
@@ -252,26 +251,24 @@
 <script setup lang="ts">
 import { ref, computed, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
-import { Calendar, Users, Star, MessageCircle, RefreshCw, AlertTriangle } from 'lucide-vue-next'
+import { 
+  Calendar, Users, Star, MessageCircle, AlertTriangle, ClipboardList, 
+  FileText, BookOpen, RefreshCw, Eye, ChevronLeft, ChevronRight 
+} from 'lucide-vue-next'
 
 const router = useRouter()
+const emit = defineEmits(['set-active-component'])
 
 // Reactive state
-const sessionNotes = ref('')
-const todaysStats = ref({
-  sessions: 6,
-  sessionsChange: 2,
-  activeClients: 24,
-  newClients: 8,
-  rating: 4.8,
-  messages: 12,
-  urgentMessages: 2
-})
-
-const clientStats = ref({
-  new: 8,
-  continuing: 16,
-  completionRate: 87
+const quickNotes = ref('')
+const overviewStats = ref({
+  sessions: 3,
+  activeClients: 28,
+  newClients: 2,
+  tasks: 5,
+  urgentTasks: 1,
+  messages: 3,
+  rating: 4.7
 })
 
 const todaysSchedule = ref([
@@ -279,11 +276,11 @@ const todaysSchedule = ref([
     id: 1,
     client: { 
       id: 1,
-      name: 'Sarah Johnson', 
-      avatar: '/api/placeholder/48/48' 
+      name: 'Wanjiku Mwangi', 
+      initials: 'WM'
     },
     type: 'Individual Therapy',
-    startTime: new Date('2024-12-09T14:00:00'),
+    startTime: new Date('2025-10-01T14:00:00'),
     status: 'upcoming',
     sessionNumber: 5
   },
@@ -291,77 +288,78 @@ const todaysSchedule = ref([
     id: 2,
     client: { 
       id: 2,
-      name: 'Mike Chen', 
-      avatar: '/api/placeholder/48/48' 
+      name: 'Ochieng Kiprop', 
+      initials: 'OK'
     },
     type: 'Follow-up Session',
-    startTime: new Date('2024-12-09T15:30:00'),
+    startTime: new Date('2025-10-01T16:00:00'),
     status: 'upcoming',
     sessionNumber: 12
-  },
-  {
-    id: 3,
-    client: { 
-      id: 3,
-      name: 'Lisa Rodriguez', 
-      avatar: '/api/placeholder/48/48' 
-    },
-    type: 'Group Therapy',
-    startTime: new Date('2024-12-09T17:00:00'),
-    status: 'completed',
-    sessionNumber: 3
   }
 ])
 
-const clientUpdates = ref([
+const pendingTasks = ref([
   {
     id: 1,
-    clientId: 1,
-    clientName: 'Sarah Johnson',
-    avatar: '/api/placeholder/40/40',
-    message: 'Completed homework assignment and mood tracking for the week',
-    time: '2 hours ago',
-    priority: 'low',
-    requiresResponse: false
+    title: 'Review Session Notes - Wanjiku',
+    initials: 'WM',
+    description: 'Update progress notes from last session',
+    due: 'Oct 2, 2025'
   },
   {
     id: 2,
-    clientId: 4,
-    clientName: 'David Park',
-    avatar: '/api/placeholder/40/40',
-    message: 'Reported increased anxiety levels - requesting earlier appointment',
+    title: 'Assign Resources - Ochieng',
+    initials: 'OK',
+    description: 'Send mindfulness exercises',
+    due: 'Oct 3, 2025'
+  }
+])
+
+const recentActivity = ref([
+  {
+    id: 1,
+    title: 'New Message from Wanjiku Mwangi',
+    initials: 'WM',
+    description: 'Checking in about anxiety triggers',
+    time: '2 hours ago',
+    type: 'Messaging',
+    unread: true
+  },
+  {
+    id: 2,
+    title: 'Session Completed - Ochieng Kiprop',
+    initials: 'OK',
+    description: 'Individual therapy session #12',
     time: '4 hours ago',
-    priority: 'high',
-    requiresResponse: true
+    type: 'Session Notes',
+    unread: false
   },
   {
     id: 3,
-    clientId: 2,
-    clientName: 'Mike Chen',
-    avatar: '/api/placeholder/40/40',
-    message: 'Shared journal entry about recent breakthrough moment',
+    title: 'Task Completed: Resource Assignment',
+    initials: 'MN',
+    description: 'Sent breathing exercises to Muthoni',
     time: '1 day ago',
-    priority: 'medium',
-    requiresResponse: false
+    type: 'Tasks',
+    unread: false
   }
 ])
 
 const urgentAlerts = ref([
   {
     id: 1,
-    title: 'Crisis Assessment Required',
-    description: 'Client David Park indicated suicidal ideation in recent message',
+    title: 'High-Risk Alert: Muthoni Njoroge',
+    description: 'Reported increased suicidal thoughts - immediate follow-up required',
     priority: 'critical'
   }
 ])
 
 const therapistProfile = ref({
-  name: 'Dr. Emily Johnson',
+  name: 'Dr. Amina Otieno',
   title: 'Dr.',
-  lastName: 'Johnson',
-  avatar: '/api/placeholder/32/32',
-  specializations: ['Anxiety', 'Depression', 'PTSD'],
-  license: 'LCSW #12345'
+  lastName: 'Otieno',
+  specializations: ['Anxiety', 'Trauma', 'Family Therapy'],
+  license: 'KPS #45678'
 })
 
 const timeOfDay = computed(() => {
@@ -371,36 +369,53 @@ const timeOfDay = computed(() => {
   return 'evening'
 })
 
+const therapistInitials = computed(() => {
+  const names = therapistProfile.value.name.trim().split(' ')
+  return names.length > 1
+    ? `${names[0][0]}${names[names.length - 1][0]}`
+    : names[0][0] || 'AO'
+})
+
+const setActiveComponent = (name: string) => {
+  emit('set-active-component', name)
+}
+
 const navigateTo = (path: string) => {
   router.push(path)
 }
 
-const refreshSchedule = async () => {
-  console.log('Refreshing schedule...')
+const handleActivityClick = (type: string, id: number) => {
+  switch (type) {
+    case 'Messaging':
+      setActiveComponent('chat')
+      break
+    case 'Session Notes':
+      setActiveComponent('session-notes')
+      break
+    case 'Tasks':
+      setActiveComponent('tasks')
+      break
+    default:
+      viewClientDetails(id)
+  }
 }
 
 const viewClientDetails = (clientId: number) => {
-  router.push(`/therapist/clients/${clientId}`)
-}
-
-const startSession = (appointmentId: number) => {
-  router.push(`/therapist/sessions/${appointmentId}/start`)
-}
-
-const viewNotes = (appointmentId: number) => {
-  router.push(`/therapist/sessions/${appointmentId}/notes`)
+  setActiveComponent('clients')
+  console.log(`Viewing client details for ID: ${clientId}`)
 }
 
 const handleAlert = (alertId: number) => {
-  router.push(`/therapist/alerts/${alertId}`)
+  setActiveComponent('session-notes') // Or dedicated alerts view
+  console.log(`Handling alert ${alertId}`)
 }
 
-const saveNotes = async () => {
-  if (!sessionNotes.value.trim()) return
+const saveQuickNotes = async () => {
+  if (!quickNotes.value.trim()) return
   try {
-    console.log('Saving session notes:', sessionNotes.value)
-    sessionNotes.value = ''
-    alert('Notes saved successfully!')
+    console.log('Saving quick notes:', quickNotes.value)
+    quickNotes.value = ''
+    // Show success toast in real app
   } catch (error) {
     console.error('Error saving notes:', error)
   }
@@ -421,15 +436,6 @@ const getStatusClass = (status: string) => {
     case 'completed': return 'bg-green-100 text-green-800'
     case 'cancelled': return 'bg-red-100 text-red-800'
     default: return 'bg-gray-100 text-gray-800'
-  }
-}
-
-const getPriorityClass = (priority: string) => {
-  switch (priority) {
-    case 'high': return 'bg-red-100 text-red-700'
-    case 'medium': return 'bg-yellow-100 text-yellow-700'
-    case 'low': return 'bg-green-100 text-green-700'
-    default: return 'bg-gray-100 text-gray-700'
   }
 }
 
@@ -466,15 +472,6 @@ button::before {
 
 button:hover::before {
   left: 100%;
-}
-
-.urgent-alert {
-  animation: pulse 2s infinite;
-}
-
-@keyframes pulse {
-  0%, 100% { opacity: 1; }
-  50% { opacity: 0.8; }
 }
 
 ::-webkit-scrollbar {

@@ -37,7 +37,7 @@ const router = createRouter({
       meta: {
         title: 'Sign In - Mental Health Platform',
         description: 'Sign in to your wellness account',
-        requiresGuest: true,
+        //requiresGuest: true,
         hideLayout: true
       }
     },
@@ -48,7 +48,7 @@ const router = createRouter({
       meta: {
         title: 'Create Account - Mental Health Platform',
         description: 'Join our wellness community today',
-        requiresGuest: true,
+        //requiresGuest: true,
         hideLayout: true
       }
     },
@@ -76,50 +76,44 @@ const router = createRouter({
       meta: {
         title: 'User Dashboard - MindWell Platform',
         description: 'Your personal wellness dashboard',
-        requiresAuth: true,
+        //requiresAuth: true,
         role: 'user'
       }
     },
     // Therapist routes
     {
       path: '/therapist',
-      name: 'therapist',
       component: () => import('../components/layout/TherapistLayout.vue'),
       meta: {
-        title: 'Therapist Dashboard - MindWell Platform',
-        description: 'Manage your clients and sessions',
         requiresAuth: true,
         role: 'therapist'
       },
       children: [
         {
+          path: '',
+          name: 'therapist',
+          component: { template: '<div></div>' }, // Empty component, layout handles dynamic rendering
+          meta: {
+            title: 'Therapist Dashboard - MindWell Platform',
+            description: 'Manage your clients and sessions'
+          }
+        },
+        {
           path: 'calendar',
           name: 'therapist-calendar',
-          components: {
-            default: () => import('../views/therapist/Calendar.vue'),
-            navbar: () => import('../components/layout/Navbar.vue'),
-            footer: () => import('../components/layout/Footer.vue')
-          },
+          component: () => import('../views/therapist/Calendar.vue'),
           meta: {
             title: 'Therapist Calendar - MindWell Platform',
-            description: 'Manage your appointments via Calendly',
-            requiresAuth: true,
-            role: 'therapist'
+            description: 'Manage your appointments via Calendly'
           }
         },
         {
           path: 'callback',
           name: 'calendly-callback',
-          components: {
-            default: () => import('../views/therapist/Calendar.vue'),
-            navbar: () => import('../components/layout/Navbar.vue'),
-            footer: () => import('../components/layout/Footer.vue')
-          },
+          component: () => import('../views/therapist/Calendar.vue'),
           meta: {
             title: 'Processing Calendly Authentication',
-            description: 'Processing your Calendly connection',
-            requiresAuth: true,
-            role: 'therapist'
+            description: 'Processing your Calendly connection'
           }
         }
       ]
@@ -132,7 +126,7 @@ const router = createRouter({
       meta: {
         title: 'Admin Dashboard - MindWell Platform',
         description: 'Manage platform settings, users, and analytics',
-        requiresAuth: true,
+        //requiresAuth: true,
         role: 'admin'
       }
     },
@@ -160,6 +154,53 @@ const router = createRouter({
   }
 })
 
+// ===========================
+// DEVELOPMENT MODE - BYPASS AUTH
+// ===========================
+const DEV_MODE = import.meta.env.DEV // true in development, false in production
+const DEV_BYPASS_AUTH = true // Set to false to test auth guards in dev
+
+// Mock authentication for development
+const getMockAuthState = () => {
+  // Check if mock auth is set in localStorage (for persistence across refreshes)
+  const mockAuth = localStorage.getItem('DEV_MOCK_AUTH')
+  const mockRole = localStorage.getItem('DEV_MOCK_ROLE')
+  
+  if (mockAuth === 'true') {
+    return {
+      isAuthenticated: true,
+      userRole: mockRole || 'therapist'
+    }
+  }
+  
+  // Default: authenticated as therapist for easy testing
+  return {
+    isAuthenticated: true,
+    userRole: 'therapist'
+  }
+}
+
+// Helper function to set mock auth state (call this from browser console if needed)
+// Example: setMockAuth('user'), setMockAuth('therapist'), setMockAuth('admin'), setMockAuth(null)
+if (DEV_MODE) {
+  (window as any).setMockAuth = (role: string | null) => {
+    if (role) {
+      localStorage.setItem('DEV_MOCK_AUTH', 'true')
+      localStorage.setItem('DEV_MOCK_ROLE', role)
+      console.log(`✅ Mock auth set: role = ${role}`)
+    } else {
+      localStorage.removeItem('DEV_MOCK_AUTH')
+      localStorage.removeItem('DEV_MOCK_ROLE')
+      console.log('❌ Mock auth cleared')
+    }
+    window.location.reload()
+  }
+  
+  console.log('🔧 Development Mode Active')
+  console.log('To test different roles, use: setMockAuth("user"), setMockAuth("therapist"), setMockAuth("admin")')
+  console.log('To test auth guards, use: setMockAuth(null)')
+}
+
 // Navigation guards
 router.beforeEach((to, from, next) => {
   // Update page title
@@ -178,32 +219,28 @@ router.beforeEach((to, from, next) => {
     descriptionElement.setAttribute('content', to.meta.description as string)
   }
 
-  // Mock authentication logic (replace with your actual auth check)
-  const isAuthenticated = true // TODO: Replace with real auth check (e.g., Firebase, JWT)
-  const userRole = 'therapist' // TODO: Replace with actual user role from auth system
-
-  // Handle requiresGuest routes
-  if (to.meta?.requiresGuest && isAuthenticated) {
-    return next(userRole === 'therapist' ? '/therapist' : '/dashboard/user')
+  // In dev mode with bypass enabled, use mock auth state
+  const auth = DEV_MODE && DEV_BYPASS_AUTH ? getMockAuthState() : {
+    isAuthenticated: false, // Replace with real auth check
+    userRole: null // Replace with real role check
   }
 
-  // Handle requiresAuth routes
-  if (to.meta?.requiresAuth && !isAuthenticated) {
-    return next('/login')
+  if (to.meta.requiresAuth && !auth.isAuthenticated) {
+    // Route requires auth but user is not authenticated
+    return next({ name: 'login' })
   }
 
-  // Handle role-based access
-  if (to.meta?.role && to.meta.role !== userRole) {
-    return next('/dashboard/user') // Redirect to user dashboard if role mismatch
+  if (to.meta.requiresGuest && auth.isAuthenticated) {
+    // Route is for guests but user is authenticated
+    return next({ name: 'dashboard' })
   }
 
-  next()
+  if (to.meta.role && auth.userRole !== to.meta.role) {
+    // Route requires specific role which user does not have
+    return next({ name: 'not-found' })
+  }
+
+  return next()
 })
 
-router.afterEach((to, from) => {
-  if (process.env.NODE_ENV === 'development') {
-    console.log(`Navigated from ${from.path || 'initial'} to ${to.path}`)
-  }
-})
-
-export default router
+export default router 

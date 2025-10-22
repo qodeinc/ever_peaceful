@@ -1,1 +1,40 @@
-@import "tailwindcss";
+/* main.css */
+
+/* Import Lexend from Google Fonts */
+@import url('https://fonts.googleapis.com/css2?family=Lexend:wght@300;400;500;600;700&display=swap');
+@import 'tailwindcss';
+
+/* Apply global styles */
+:root {
+  --font-primary: 'Lexend', sans-serif;
+}
+
+html {
+  scroll-behavior: smooth;
+}
+
+body {
+  font-family: var(--font-primary);
+  font-size: 18px;
+  background-color: #f9fafb;
+  color: #111827;
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+}
+
+/* Optional: Headings for better visual hierarchy */
+h1, h2, h3, h4, h5, h6 {
+  font-weight: 700;
+  letter-spacing: -0.03em;
+}
+
+p {
+  font-weight: 400;
+  line-height: 1.7;
+}
+
+/* Buttons and interactive elements */
+button, a {
+  font-family: inherit;
+  font-weight: 600;;
+}
