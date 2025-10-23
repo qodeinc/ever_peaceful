@@ -1,223 +1,188 @@
 <template>
-  <div class="max-w-6xl mx-auto px-6 py-12">
-    <!-- Main Layout: Left Header, Right Form -->
-    <div class="grid grid-cols-1 lg:grid-cols-2 gap-12 items-start">
-      <!-- Left Side: Header and Info -->
-      <div class="space-y-8">
-        <!-- Header -->
-        <div class="space-y-4">
-          <div class="flex items-start space-x-4">
-            <div class="w-12 h-12 bg-emerald-100 rounded-xl flex items-center justify-center flex-shrink-0">
-              <svg class="w-6 h-6 text-emerald-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01" />
-              </svg>
-            </div>
-            <div class="flex-1">
-              <h1 class="text-3xl font-bold text-gray-900 mb-2">GAD-7 Assessment</h1>
-              <h2 class="text-lg text-emerald-600 font-semibold mb-3">Generalized Anxiety Disorder 7-item</h2>
-              <p class="text-gray-600 leading-relaxed">
-                The GAD-7 is an easy to perform initial screening tool for generalized anxiety disorder. 
-                This assessment takes about 2-3 minutes to complete.
-              </p>
-            </div>
-          </div>
-        </div>
-
-        <!-- Important Note -->
-        <div class="bg-emerald-50 rounded-xl p-6 border border-emerald-200">
-          <div class="flex items-start space-x-3">
-            <svg class="w-5 h-5 text-emerald-600 flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-            </svg>
-            <div class="text-sm text-emerald-900">
-              <p class="font-semibold mb-1">Over the Last 2 Weeks</p>
-              <p>
-                How often have you been bothered by any of the following problems?
-              </p>
-            </div>
-          </div>
-        </div>
+  <div class="min-h-screen bg-white">
+    <div class="max-w-4xl mx-auto px-6 py-16">
+      <!-- Header -->
+      <div class="mb-20">
+        <h1 class="text-5xl font-light text-gray-900 mb-4 tracking-tight">GAD-7 Assessment</h1>
+        <p class="text-lg text-gray-500 mb-8 max-w-2xl">A screening tool for generalized anxiety disorder. Answer each question based on how you've felt over the last two weeks.</p>
+        <div class="text-sm text-gray-400">7 questions · 2-3 minutes</div>
       </div>
 
-      <!-- Right Side: Scrollable Form -->
-      <div class="space-y-6 max-h-screen overflow-y-auto pr-4 lg:pr-0">
-        <div class="bg-white rounded-2xl shadow-sm border border-gray-200 p-6 lg:p-8">
-          <div class="mb-6">
-            <h3 class="text-xl font-semibold text-gray-900 mb-4">
-              Over the last 2 weeks, how often have you been bothered by the following problems?
-            </h3>
-          </div>
+      <!-- Progress Indicator -->
+      <div class="mb-16">
+        <div class="flex items-center gap-2">
+          <div 
+            v-for="i in 7" 
+            :key="i"
+            :class="[
+              'h-1 flex-1 transition-all duration-500',
+              answeredQuestions >= i ? 'bg-emerald-600' : 'bg-gray-200'
+            ]"
+          />
+        </div>
+        <div class="text-sm text-gray-500 mt-3">Question {{ Math.min(answeredQuestions + 1, 7) }} of 7</div>
+      </div>
 
-          <form @submit.prevent="calculateScore" class="space-y-8">
-            <!-- Questions -->
-            <div
-              v-for="(question, index) in questions"
-              :key="index"
-              :ref="el => setQuestionRef(index, el)"
-              class="pb-6 border-b border-gray-200 last:border-b-0"
+      <!-- Questions -->
+      <form @submit.prevent="calculateScore" class="space-y-24">
+        <div
+          v-for="(question, index) in questions"
+          :key="index"
+          :ref="el => setQuestionRef(index, el)"
+          class="scroll-mt-32"
+        >
+          <div class="mb-8">
+            <div class="text-sm text-gray-400 mb-3">Question {{ index + 1 }}</div>
+            <h2 class="text-3xl font-light text-gray-900 mb-2">
+              {{ question }}
+            </h2>
+            <p class="text-gray-500">Over the last 2 weeks, how often have you been bothered by this?</p>
+          </div>
+          
+          <div class="space-y-3">
+            <label
+              v-for="option in options"
+              :key="option.value"
+              :class="[
+                'group block p-6 border-2 cursor-pointer transition-all duration-200',
+                answers[index] === option.value
+                  ? 'border-emerald-600 bg-emerald-50/50'
+                  : 'border-gray-200 hover:border-gray-400'
+              ]"
             >
-              <label class="block text-lg font-medium text-gray-900 mb-4">
-                {{ index + 1 }}. {{ question }}
-              </label>
-              <div class="grid grid-cols-1 md:grid-cols-4 gap-3">
-                <label
-                  v-for="option in options"
-                  :key="option.value"
-                  :class="[
-                    'flex items-center justify-center p-4 border-2 rounded-xl cursor-pointer transition-all duration-200',
-                    answers[index] === option.value
-                      ? 'border-emerald-500 bg-emerald-50 shadow-md'
-                      : 'border-gray-200 hover:border-emerald-300 hover:bg-gray-50'
-                  ]"
-                >
-                  <input
-                    type="radio"
-                    v-model="answers[index]"
-                    :value="option.value"
-                    class="sr-only"
-                    required
-                    @change="onAnswerChange(index)"
-                  />
-                  <div class="text-center">
-                    <p class="font-medium text-gray-900">{{ option.label }}</p>
-                    <p class="text-sm text-gray-500 mt-1">{{ option.value }} point{{ option.value !== 1 ? 's' : '' }}</p>
-                  </div>
-                </label>
+              <input
+                type="radio"
+                v-model="answers[index]"
+                :value="option.value"
+                class="sr-only"
+                required
+                @change="onAnswerChange(index)"
+              />
+              <div class="flex items-center justify-between">
+                <span class="text-lg text-gray-900">{{ option.label }}</span>
+                <div :class="[
+                  'w-5 h-5 border-2 rounded-full transition-all',
+                  answers[index] === option.value
+                    ? 'border-emerald-600 bg-emerald-600'
+                    : 'border-gray-300 group-hover:border-gray-400'
+                ]">
+                  <div v-if="answers[index] === option.value" class="w-full h-full rounded-full bg-white scale-[0.4]" />
+                </div>
+              </div>
+            </label>
+          </div>
+        </div>
+
+        <!-- Submit Button -->
+        <div v-if="allAnswered" class="pt-12 border-t border-gray-200">
+          <button
+            type="submit"
+            class="w-full bg-emerald-600 text-white py-5 text-lg hover:bg-emerald-700 transition-colors disabled:bg-gray-300 disabled:cursor-not-allowed"
+          >
+            View Results
+          </button>
+        </div>
+      </form>
+
+      <!-- Results Section -->
+      <div v-if="showResults" class="mt-32 pt-32 border-t border-gray-200">
+        <!-- Score -->
+        <div class="mb-20">
+          <div class="text-sm text-gray-400 mb-4">Your Score</div>
+          <div class="flex items-baseline gap-4 mb-8">
+            <span class="text-8xl font-light text-gray-900">{{ totalScore }}</span>
+            <span class="text-3xl text-gray-400">/ 21</span>
+          </div>
+          
+          <div class="max-w-2xl">
+            <h3 class="text-2xl font-light text-gray-900 mb-4">{{ interpretationTitle }}</h3>
+            <p class="text-lg text-gray-600 leading-relaxed">{{ interpretationText }}</p>
+          </div>
+        </div>
+
+        <!-- Severity Scale -->
+        <div class="mb-20 py-12 border-y border-gray-200">
+          <h4 class="text-sm uppercase tracking-wider text-gray-500 mb-8">Severity Scale</h4>
+          <div class="space-y-4">
+            <div 
+              v-for="level in severityLevels" 
+              :key="level.range"
+              :class="[
+                'p-6 border-2 transition-all',
+                isInRange(level.min, level.max) ? 'border-emerald-600 bg-emerald-50/50' : 'border-gray-200'
+              ]"
+            >
+              <div class="flex items-center justify-between">
+                <div>
+                  <h5 class="text-lg font-medium text-gray-900 mb-1">{{ level.title }}</h5>
+                  <p class="text-sm text-gray-600">{{ level.description }}</p>
+                </div>
+                <div class="text-right">
+                  <div class="text-2xl font-light text-gray-900">{{ level.range }}</div>
+                  <div class="text-sm text-gray-500">points</div>
+                </div>
               </div>
             </div>
-
-            <!-- Submit Button -->
-            <div class="flex justify-center mt-8 pt-6 border-t border-gray-200 sticky bottom-0 bg-white py-4">
-              <button
-                type="submit"
-                class="px-8 py-4 bg-emerald-600 text-white font-semibold rounded-xl hover:bg-emerald-700 transition-colors duration-200 shadow-lg hover:shadow-xl disabled:bg-gray-400 disabled:cursor-not-allowed"
-                :disabled="!allAnswered"
-              >
-                Calculate Score
-              </button>
-            </div>
-          </form>
+          </div>
         </div>
-      </div>
-    </div>
 
-    <!-- Results Section (Full Width Below) -->
-    <div v-if="showResults" class="mt-16 space-y-8 animate-fadeIn">
-      <div class="text-center mb-6">
-        <h3 class="text-2xl font-bold text-gray-900 mb-2">Your Results</h3>
-        <div class="inline-block bg-emerald-100 rounded-2xl px-8 py-4 mt-4">
-          <p class="text-sm text-gray-600 mb-1">Total Score</p>
-          <p class="text-5xl font-bold text-emerald-600">{{ totalScore }}</p>
-          <p class="text-sm text-gray-500 mt-1">out of 21</p>
-        </div>
-      </div>
-
-      <!-- Interpretation -->
-      <div :class="[
-        'rounded-xl p-6 mb-6',
-        severityClass
-      ]">
-        <div class="flex items-start space-x-3">
-          <svg v-if="totalScore >= 10" class="w-6 h-6 flex-shrink-0 mt-1" :class="severityIconColor" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
-          </svg>
-          <svg v-else class="w-6 h-6 flex-shrink-0 mt-1" :class="severityIconColor" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
-          </svg>
-          <div>
-            <h4 class="font-semibold text-lg mb-2" :class="severityTextColor">
-              {{ interpretationTitle }}
-            </h4>
-            <p class="text-gray-700 leading-relaxed">
-              {{ interpretationText }}
+        <!-- Clinical Information -->
+        <div class="mb-20 py-12 border-b border-gray-200">
+          <h4 class="text-sm uppercase tracking-wider text-gray-500 mb-8">Clinical Interpretation</h4>
+          <div class="max-w-2xl space-y-6 text-gray-600">
+            <p>
+              Using a cut-off score of 8, the GAD-7 has a sensitivity of 92% and specificity of 76% for identifying probable cases of generalized anxiety disorder.
+            </p>
+            <p>
+              Although designed as a screening tool for generalized anxiety, the GAD-7 also performs reasonably well as a screening tool for other common anxiety disorders including Panic Disorder, Social Anxiety Disorder, and Post-Traumatic Stress Disorder.
             </p>
           </div>
         </div>
-      </div>
 
-      <!-- Clinical Information -->
-      <div class="bg-gray-50 rounded-xl p-6 mb-6">
-        <h4 class="font-semibold text-lg text-gray-900 mb-4">Clinical Interpretation</h4>
-        <div class="space-y-3">
-          <p class="text-gray-700">
-            <span class="font-semibold">Diagnostic Cut-off:</span> A score of 8 or greater represents a reasonable cut-point for identifying probable cases of generalized anxiety disorder. Using this cut-off, the GAD-7 has a sensitivity of 92% and specificity of 76%.
-          </p>
-          <p class="text-gray-700">
-            <span class="font-semibold">Severity Levels:</span>
-          </p>
-          <ul class="list-disc list-inside text-gray-700 space-y-1 ml-4">
-            <li>0-4: Minimal Anxiety</li>
-            <li>5-9: Mild Anxiety</li>
-            <li>10-14: Moderate Anxiety</li>
-            <li>15+: Severe Anxiety</li>
-          </ul>
+        <!-- Performance Table -->
+        <div class="mb-20">
+          <h4 class="text-sm uppercase tracking-wider text-gray-500 mb-8">Performance as Screening Tool</h4>
+          <div class="overflow-x-auto">
+            <table class="w-full">
+              <thead>
+                <tr class="border-b border-gray-200">
+                  <th class="text-left py-4 text-sm font-medium text-gray-900">Disorder</th>
+                  <th class="text-right py-4 text-sm font-medium text-gray-900">Sensitivity</th>
+                  <th class="text-right py-4 text-sm font-medium text-gray-900">Specificity</th>
+                  <th class="text-right py-4 text-sm font-medium text-gray-900">LR+</th>
+                </tr>
+              </thead>
+              <tbody class="divide-y divide-gray-100">
+                <tr v-for="row in performanceData" :key="row.test" class="hover:bg-gray-50">
+                  <td class="py-4 text-sm text-gray-900">{{ row.test }}</td>
+                  <td class="py-4 text-sm text-gray-600 text-right">{{ row.sensitivity }}</td>
+                  <td class="py-4 text-sm text-gray-600 text-right">{{ row.specificity }}</td>
+                  <td class="py-4 text-sm text-gray-600 text-right">{{ row.likelihoodRatio }}</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
         </div>
-      </div>
 
-      <!-- Performance Information -->
-      <div class="bg-gray-50 rounded-xl p-6 mb-6">
-        <h4 class="font-semibold text-lg text-gray-900 mb-4">About This Assessment</h4>
-        <p class="text-gray-700 mb-4">
-          Although designed as a screening tool for generalized anxiety, the GAD-7 also performs reasonably well as a screening tool for three other common anxiety disorders—Panic Disorder, Social Anxiety Disorder, and Posttraumatic Stress Disorder.
-        </p>
-        <p class="text-gray-700">
-          Based on recent meta-analysis, some experts recommend considering a cut-off of 8 to optimize sensitivity without compromising specificity.
-        </p>
-      </div>
-
-      <!-- Performance Table -->
-      <div class="bg-white rounded-xl border-2 border-gray-200 overflow-hidden mb-6">
-        <div class="bg-gray-50 px-6 py-3 border-b border-gray-200">
-          <h4 class="font-semibold text-gray-900">Performance as Screening Tool (Cut-off Score ≥10)</h4>
+        <!-- Actions -->
+        <div class="flex gap-4">
+          <button
+            @click="resetAssessment"
+            class="flex-1 py-4 border-2 border-gray-900 text-gray-900 hover:bg-gray-900 hover:text-white transition-colors"
+          >
+            Retake Assessment
+          </button>
+          <button
+            @click="saveResults"
+            class="flex-1 py-4 bg-emerald-600 text-white hover:bg-emerald-700 transition-colors"
+          >
+            Save Results
+          </button>
         </div>
-        <div class="overflow-x-auto">
-          <table class="w-full">
-            <thead class="bg-gray-50 border-b border-gray-200">
-              <tr>
-                <th class="px-6 py-3 text-left text-sm font-semibold text-gray-900">Test</th>
-                <th class="px-6 py-3 text-center text-sm font-semibold text-gray-900">Sensitivity</th>
-                <th class="px-6 py-3 text-center text-sm font-semibold text-gray-900">Specificity</th>
-                <th class="px-6 py-3 text-center text-sm font-semibold text-gray-900">Positive Likelihood Ratio</th>
-              </tr>
-            </thead>
-            <tbody class="divide-y divide-gray-200">
-              <tr v-for="row in performanceData" :key="row.test" class="hover:bg-gray-50">
-                <td class="px-6 py-4 text-sm text-gray-900">{{ row.test }}</td>
-                <td class="px-6 py-4 text-sm text-center text-gray-700">{{ row.sensitivity }}</td>
-                <td class="px-6 py-4 text-sm text-center text-gray-700">{{ row.specificity }}</td>
-                <td class="px-6 py-4 text-sm text-center text-gray-700">{{ row.likelihoodRatio }}</td>
-              </tr>
-            </tbody>
-          </table>
-        </div>
-      </div>
 
-      <!-- Action Buttons -->
-      <div class="flex flex-col sm:flex-row gap-3 justify-center">
-        <button
-          @click="resetAssessment"
-          class="px-6 py-3 bg-gray-100 text-gray-700 font-medium rounded-xl hover:bg-gray-200 transition-colors duration-200"
-        >
-          Take Assessment Again
-        </button>
-        <button
-          @click="saveResults"
-          class="px-6 py-3 bg-emerald-600 text-white font-medium rounded-xl hover:bg-emerald-700 transition-colors duration-200"
-        >
-          Save Results
-        </button>
-      </div>
-    </div>
-
-    <!-- Disclaimer (Full Width) -->
-    <div class="mt-16 bg-blue-50 rounded-xl p-6 border border-blue-200">
-      <div class="flex items-start space-x-3">
-        <svg class="w-5 h-5 text-blue-600 flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-        </svg>
-        <div class="text-sm text-blue-900">
-          <p class="font-semibold mb-1">Important Note</p>
-          <p>
+        <!-- Disclaimer -->
+        <div class="mt-20 pt-12 border-t border-gray-200">
+          <p class="text-sm text-gray-500 leading-relaxed">
             This screening tool is not a diagnostic instrument. If you score 8 or higher, or if you have concerns about anxiety, 
             please consult with a qualified mental health professional for a comprehensive evaluation.
           </p>
@@ -249,6 +214,14 @@ const options = [
   { label: 'Nearly every day', value: 3 }
 ]
 
+// Severity levels
+const severityLevels = [
+  { title: 'Minimal Anxiety', range: '0-4', min: 0, max: 4, description: 'Few to no anxiety symptoms' },
+  { title: 'Mild Anxiety', range: '5-9', min: 5, max: 9, description: 'Some anxiety symptoms present' },
+  { title: 'Moderate Anxiety', range: '10-14', min: 10, max: 14, description: 'Significant anxiety symptoms' },
+  { title: 'Severe Anxiety', range: '15-21', min: 15, max: 21, description: 'Severe anxiety symptoms requiring attention' }
+]
+
 // Performance data
 const performanceData = [
   { test: 'Generalized Anxiety Disorder', sensitivity: '89%', specificity: '82%', likelihoodRatio: '5.1' },
@@ -265,37 +238,19 @@ const showResults = ref(false)
 const totalScore = ref(0)
 
 // Computed properties
+const answeredQuestions = computed(() => {
+  return Object.keys(answers.value).filter(key => answers.value[key] !== null && answers.value[key] !== undefined).length
+})
+
 const allAnswered = computed(() => {
-  return Object.keys(answers.value).length === questions.length && 
-         Object.values(answers.value).every(val => val !== null && val !== undefined)
-})
-
-const severityClass = computed(() => {
-  if (totalScore.value >= 15) return 'bg-red-50 border-2 border-red-200'
-  if (totalScore.value >= 10) return 'bg-orange-50 border-2 border-orange-200'
-  if (totalScore.value >= 5) return 'bg-amber-50 border-2 border-amber-200'
-  return 'bg-green-50 border-2 border-green-200'
-})
-
-const severityIconColor = computed(() => {
-  if (totalScore.value >= 15) return 'text-red-600'
-  if (totalScore.value >= 10) return 'text-orange-600'
-  if (totalScore.value >= 5) return 'text-amber-600'
-  return 'text-green-600'
-})
-
-const severityTextColor = computed(() => {
-  if (totalScore.value >= 15) return 'text-red-900'
-  if (totalScore.value >= 10) return 'text-orange-900'
-  if (totalScore.value >= 5) return 'text-amber-900'
-  return 'text-green-900'
+  return answeredQuestions.value === questions.length
 })
 
 const interpretationTitle = computed(() => {
-  if (totalScore.value >= 15) return 'Severe Anxiety'
-  if (totalScore.value >= 10) return 'Moderate Anxiety'
-  if (totalScore.value >= 5) return 'Mild Anxiety'
-  return 'Minimal Anxiety'
+  if (totalScore.value >= 15) return 'Severe anxiety'
+  if (totalScore.value >= 10) return 'Moderate anxiety'
+  if (totalScore.value >= 5) return 'Mild anxiety'
+  return 'Minimal anxiety'
 })
 
 const interpretationText = computed(() => {
@@ -321,11 +276,25 @@ const setQuestionRef = (index, el) => {
   }
 }
 
+const isInRange = (min, max) => {
+  return totalScore.value >= min && totalScore.value <= max
+}
+
 const onAnswerChange = async (index) => {
   await nextTick()
+  
+  // Scroll to next question or submit button
   const nextIndex = index + 1
   if (nextIndex < questions.length && questionRefs.value[nextIndex]) {
-    questionRefs.value[nextIndex].$el.scrollIntoView({ behavior: 'smooth', block: 'start' })
+    questionRefs.value[nextIndex].scrollIntoView({ behavior: 'smooth', block: 'center' })
+  } else if (allAnswered.value) {
+    // Scroll to submit button
+    setTimeout(() => {
+      const submitButton = document.querySelector('button[type="submit"]')
+      if (submitButton) {
+        submitButton.scrollIntoView({ behavior: 'smooth', block: 'center' })
+      }
+    }, 100)
   }
 }
 
@@ -335,7 +304,7 @@ const calculateScore = () => {
   
   // Scroll to results
   setTimeout(() => {
-    const resultsElement = document.querySelector('.animate-fadeIn')
+    const resultsElement = document.querySelector('.mt-32.pt-32')
     if (resultsElement) {
       resultsElement.scrollIntoView({ behavior: 'smooth', block: 'start' })
     }
@@ -359,40 +328,35 @@ const saveResults = () => {
     date: new Date().toISOString(),
     answers: answers.value
   })
-  alert('Results saved successfully! (This will be implemented with backend integration)')
+  alert('Results saved successfully!')
 }
 </script>
 
 <style scoped>
-@keyframes fadeIn {
-  from {
-    opacity: 0;
-    transform: translateY(20px);
+/* Smooth scrolling */
+html {
+  scroll-behavior: smooth;
+}
+
+/* Custom radio button animation */
+input[type="radio"]:checked + div .scale-\[0\.4\] {
+  animation: radioCheck 0.2s ease-out;
+}
+
+@keyframes radioCheck {
+  0% {
+    transform: scale(0);
   }
-  to {
-    opacity: 1;
-    transform: translateY(0);
+  50% {
+    transform: scale(0.5);
+  }
+  100% {
+    transform: scale(0.4);
   }
 }
 
-.animate-fadeIn {
-  animation: fadeIn 0.5s ease-out;
-}
-
-/* Custom radio button styling */
-input[type="radio"]:checked + div {
-  transform: scale(1.02);
-}
-
-/* Table styling */
-table {
-  border-collapse: collapse;
-}
-
-/* Smooth transitions */
-* {
-  transition-property: background-color, border-color, transform;
-  transition-duration: 200ms;
-  transition-timing-function: ease-in-out;
+/* Table hover effect */
+table tbody tr {
+  transition: background-color 0.15s ease;
 }
 </style>

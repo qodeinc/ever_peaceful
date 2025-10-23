@@ -1,239 +1,234 @@
 <template>
-  <div class="min-h-screen bg-gradient-to-br from-teal-50/50 via-white to-emerald-50/50">
-    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+  <div class="min-h-screen bg-white">
+    <div class="max-w-7xl mx-auto px-6 lg:px-8 py-12">
       <!-- Header -->
-      <div class="mb-8">
-        <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
-          <div>
-            <h1 class="text-3xl font-bold text-gray-900 mb-2">Book a Session</h1>
-            <p class="text-gray-600">Find the perfect therapist for your needs. All sessions are confidential and secure.</p>
+      <div class="mb-16">
+        <div class="flex flex-col md:flex-row md:items-start md:justify-between gap-8">
+          <div class="max-w-2xl">
+            <h1 class="text-5xl font-light text-gray-900 mb-4 tracking-tight">Therapists</h1>
+            <p class="text-lg text-gray-500 leading-relaxed">Professional support when you need it. Confidential, secure, personalized.</p>
           </div>
-          <div class="relative md:w-80">
+          <div class="relative md:w-96">
             <input 
               v-model="searchQuery" 
               type="text" 
-              placeholder="Search therapists by name or specialization..." 
-              class="w-full pl-10 pr-4 py-3 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-teal-500 focus:border-teal-500 text-sm"
+              placeholder="Search by name or specialty" 
+              class="w-full pl-11 pr-4 py-3.5 border-b-2 border-gray-200 focus:outline-none focus:border-emerald-600 text-base bg-transparent transition-colors"
             />
-            <Search class="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400" />
+            <Search class="absolute left-0 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400" />
           </div>
         </div>
       </div>
 
       <!-- Filters -->
-      <div class="mb-8">
-        <div class="flex flex-wrap gap-2">
+      <div class="mb-12 border-b border-gray-200">
+        <div class="flex flex-wrap gap-6 pb-6">
+          <button
+            @click="selectedSpecialization = ''"
+            :class="[
+              'text-sm font-medium transition-colors pb-2 border-b-2',
+              !selectedSpecialization
+                ? 'text-emerald-600 border-emerald-600'
+                : 'text-gray-500 border-transparent hover:text-gray-900'
+            ]"
+          >
+            All
+          </button>
           <button
             v-for="spec in specializations"
             :key="spec"
             @click="selectedSpecialization = selectedSpecialization === spec ? '' : spec"
             :class="[
-              'px-4 py-2 rounded-xl text-sm font-medium transition-all',
+              'text-sm font-medium transition-colors pb-2 border-b-2',
               selectedSpecialization === spec
-                ? 'bg-teal-600 text-white shadow-sm'
-                : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                ? 'text-emerald-600 border-emerald-600'
+                : 'text-gray-500 border-transparent hover:text-gray-900'
             ]"
           >
             {{ spec }}
           </button>
-          <button
-            @click="selectedSpecialization = ''"
-            :class="[
-              'px-4 py-2 rounded-xl text-sm font-medium transition-all',
-              selectedSpecialization ? 'bg-gray-100 text-gray-700 hover:bg-gray-200' : 'bg-teal-600 text-white shadow-sm'
-            ]"
-          >
-            All Specializations
-          </button>
         </div>
-        <p v-if="selectedSpecialization" class="text-xs text-gray-500 mt-2">
-          Showing {{ filteredTherapists.length }} therapists specializing in {{ selectedSpecialization }}
-        </p>
       </div>
 
-      <!-- Recommended Therapists Section -->
-      <section v-if="recommendedTherapists.length > 0" class="mb-8">
-        <h2 class="text-2xl font-bold text-gray-900 mb-4">Recommended for You</h2>
-        <p class="text-gray-600 mb-6">Based on your profile and past sessions, these therapists may be a great match.</p>
-        <div class="space-y-4">
-          <div 
-            v-for="therapist in recommendedTherapists" 
-            :key="therapist.id"
-            class="flex items-start gap-4 p-4 bg-white rounded-xl border border-gray-200 hover:border-teal-300 transition-all duration-300 cursor-pointer"
-            @click="bookSession(therapist.id)"
-          >
-            <!-- Avatar -->
-            <img :src="getAvatar(therapist.id)" class="w-16 h-16 rounded-full flex-shrink-0" alt="Therapist Avatar" />
-            
-            <!-- Content -->
-            <div class="flex-1 min-w-0">
-              <div class="flex items-start justify-between mb-2">
-                <h3 class="font-bold text-gray-900 text-lg leading-tight flex-1 pr-4 truncate">{{ therapist.name }}</h3>
-                <div class="flex flex-col items-end">
-                  <span class="px-2 py-1 bg-teal-100 text-teal-700 rounded-full text-xs font-medium">
-                    {{ therapist.availability }}
-                  </span>
-                  <span class="text-xs text-gray-500 mt-1">{{ therapist.experience }} years exp.</span>
-                </div>
-              </div>
-              
-              <!-- Specializations -->
-              <div class="mb-2">
-                <p class="text-xs text-gray-600 mb-1">Specializations:</p>
-                <div class="flex flex-wrap gap-1">
-                  <span 
-                    v-for="spec in therapist.specializations.slice(0, 2)" 
-                    :key="spec"
-                    class="px-2 py-1 bg-gray-100 text-gray-700 rounded text-xs"
-                  >
-                    {{ spec }}
-                  </span>
-                  <span v-if="therapist.specializations.length > 2" class="text-xs text-gray-500">+{{ therapist.specializations.length - 2 }} more</span>
-                </div>
-              </div>
-              
-              <!-- Bio Snippet -->
-              <p class="text-sm text-gray-600 line-clamp-2 leading-relaxed mb-3">{{ therapist.bio }}</p>
-              
-              <!-- Book Button -->
-              <button 
-                class="text-teal-600 hover:text-teal-700 text-sm font-medium flex items-center gap-1 transition-colors"
-              >
-                Book Session (KSh {{ therapist.rate }}) <ChevronRight class="w-4 h-4" />
-              </button>
-            </div>
-          </div>
-        </div>
-      </section>
-
-      <!-- All Therapists Grid with Pagination -->
-      <section>
-        <div class="flex items-center justify-between mb-6">
-          <h2 class="text-2xl font-bold text-gray-900">All Therapists</h2>
+      <!-- All Therapists Grid -->
+      <section class="mb-20">
+        <div class="flex items-baseline justify-between mb-8">
+          <h2 class="text-sm uppercase tracking-wider text-gray-500">All Therapists</h2>
           <p class="text-sm text-gray-500">{{ filteredTherapists.length }} available</p>
         </div>
-        <div v-if="paginatedTherapists.length > 0" class="space-y-4 mb-6">
-          <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+        
+        <div v-if="paginatedTherapists.length > 0">
+          <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-12">
             <div 
               v-for="therapist in paginatedTherapists" 
               :key="therapist.id"
-              class="bg-white rounded-xl p-4 border border-gray-200 hover:border-teal-300 hover:shadow-md transition-all duration-300 cursor-pointer compact-card"
+              class="group bg-white border border-gray-200 hover:border-emerald-500 transition-all duration-300 cursor-pointer"
               @click="bookSession(therapist.id)"
             >
-              <!-- Avatar -->
-              <img :src="getAvatar(therapist.id)" class="w-16 h-16 rounded-full mx-auto mb-3 flex-shrink-0" alt="Therapist Avatar" />
-              
-              <!-- Name -->
-              <h3 class="font-bold text-gray-900 text-base text-center mb-2 truncate">{{ therapist.name }}</h3>
-              
-              <!-- Availability Badge -->
-              <span class="block w-full px-2 py-1 bg-teal-100 text-teal-700 rounded-full text-xs font-medium text-center mb-2">
-                {{ therapist.availability }}
-              </span>
-              
-              <!-- Specializations -->
-              <div class="mb-2">
-                <div class="flex flex-wrap justify-center gap-1 mb-2">
+              <!-- Content -->
+              <div class="p-6 text-center">
+                <!-- Avatar -->
+                <div class="mb-4">
+                  <img :src="getAvatar(therapist.id)" class="w-24 h-24 rounded-full object-cover mx-auto border-4 border-gray-100 group-hover:border-emerald-100 transition-all" alt="" />
+                </div>
+                
+                <div class="mb-3">
+                  <h3 class="text-xl font-light text-gray-900 mb-1">{{ therapist.name }}</h3>
+                  <p class="text-sm text-gray-500">{{ therapist.experience }} years experience</p>
+                </div>
+                
+                <p class="text-sm text-gray-600 mb-4 line-clamp-2 leading-relaxed">{{ therapist.bio }}</p>
+                
+                <!-- Specializations -->
+                <div class="flex flex-wrap gap-2 mb-4 justify-center">
                   <span 
                     v-for="spec in therapist.specializations.slice(0, 2)" 
                     :key="spec"
-                    class="px-2 py-1 bg-gray-100 text-gray-700 rounded text-xs"
+                    class="text-xs text-emerald-700 bg-emerald-50 px-2 py-1"
                   >
                     {{ spec }}
                   </span>
-                  <span v-if="therapist.specializations.length > 2" class="text-xs text-gray-500">+{{ therapist.specializations.length - 2 }}</span>
+                  <span v-if="therapist.specializations.length > 2" class="text-xs text-gray-500 px-2 py-1">
+                    +{{ therapist.specializations.length - 2 }}
+                  </span>
+                </div>
+                
+                <!-- Rate & CTA -->
+                <div class="flex items-center justify-between pt-4 border-t border-gray-100">
+                  <span class="text-lg font-light text-gray-900">KSh {{ therapist.rate.toLocaleString() }}</span>
+                  <ChevronRight class="w-5 h-5 text-gray-400 group-hover:text-emerald-600 group-hover:translate-x-1 transition-all" />
                 </div>
               </div>
-              
-              <!-- Rate -->
-              <p class="text-center text-sm text-gray-600 mb-3">KSh {{ therapist.rate }} / session</p>
-              
-              <!-- Book Button -->
-              <button 
-                class="w-full bg-teal-600 text-white py-2 px-4 rounded-xl hover:bg-teal-700 transition-colors font-medium text-sm"
+            </div>
+          </div>
+
+          <!-- Pagination -->
+          <div class="flex items-center justify-center gap-2 pt-8 border-t border-gray-200">
+            <button
+              @click="currentPage = Math.max(currentPage - 1, 1)"
+              :disabled="currentPage === 1"
+              class="px-4 py-2 text-sm font-medium disabled:opacity-30 disabled:cursor-not-allowed transition-all"
+              :class="currentPage === 1 ? 'text-gray-400' : 'text-gray-900 hover:text-emerald-600'"
+            >
+              Previous
+            </button>
+            
+            <div class="flex gap-1">
+              <button
+                v-for="pageNum in totalPages"
+                :key="pageNum"
+                @click="currentPage = pageNum"
+                class="w-10 h-10 text-sm font-medium transition-colors"
+                :class="currentPage === pageNum ? 'text-emerald-600 bg-emerald-50' : 'text-gray-500 hover:text-gray-900'"
               >
-                Book Now
+                {{ pageNum }}
               </button>
             </div>
+            
+            <button
+              @click="currentPage = Math.min(currentPage + 1, totalPages)"
+              :disabled="currentPage === totalPages"
+              class="px-4 py-2 text-sm font-medium disabled:opacity-30 disabled:cursor-not-allowed transition-all"
+              :class="currentPage === totalPages ? 'text-gray-400' : 'text-gray-900 hover:text-emerald-600'"
+            >
+              Next
+            </button>
           </div>
         </div>
 
         <!-- No Therapists Message -->
-        <div v-else class="text-center py-12 bg-white rounded-2xl shadow-sm border border-gray-200">
-          <Users class="w-16 h-16 text-gray-400 mx-auto mb-4" />
-          <h3 class="text-lg font-medium text-gray-900 mb-2">No therapists found</h3>
-          <p class="text-gray-500 mb-4">Try adjusting your search or specialization filter.</p>
+        <div v-else class="text-center py-24">
+          <Users class="w-12 h-12 text-gray-300 mx-auto mb-4" />
+          <h3 class="text-xl font-light text-gray-900 mb-2">No therapists found</h3>
+          <p class="text-gray-500 mb-6">Try adjusting your search or filter</p>
           <button 
-            @click="selectedSpecialization = ''"
-            class="px-6 py-2 bg-teal-600 text-white rounded-xl hover:bg-teal-700 transition-colors"
+            @click="selectedSpecialization = ''; searchQuery = ''"
+            class="px-6 py-3 bg-emerald-600 text-white hover:bg-emerald-700 transition-colors text-sm font-medium"
           >
-            Clear Filters
+            Clear filters
           </button>
         </div>
+      </section>
 
-        <!-- Pagination -->
-        <div v-if="filteredTherapists.length > 0" class="flex items-center justify-center space-x-2 mt-8">
-          <button
-            @click="currentPage = Math.max(currentPage - 1, 1)"
-            :disabled="currentPage === 1"
-            class="px-3 py-2 text-sm font-medium rounded-lg disabled:opacity-50 disabled:cursor-not-allowed"
-            :class="currentPage === 1 ? 'bg-gray-200 text-gray-500' : 'bg-teal-600 text-white hover:bg-teal-700'"
+      <!-- Recommended Therapists Section -->
+      <section v-if="recommendedTherapists.length > 0" class="border-t border-gray-200 pt-20">
+        <h2 class="text-sm uppercase tracking-wider text-gray-500 mb-2">Recommended for You</h2>
+        <p class="text-base text-gray-600 mb-8">Based on your profile and preferences</p>
+        
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+          <div 
+            v-for="therapist in recommendedTherapists" 
+            :key="therapist.id"
+            class="group bg-emerald-50/50 border border-emerald-200 hover:border-emerald-500 transition-all duration-300 cursor-pointer"
+            @click="bookSession(therapist.id)"
           >
-            Previous
-          </button>
-          
-          <button
-            v-for="pageNum in totalPages"
-            :key="pageNum"
-            @click="currentPage = pageNum"
-            class="px-3 py-2 text-sm font-medium rounded-lg"
-            :class="currentPage === pageNum ? 'bg-teal-600 text-white' : 'bg-gray-200 text-gray-700 hover:bg-gray-300'"
-          >
-            {{ pageNum }}
-          </button>
-          
-          <button
-            @click="currentPage = Math.min(currentPage + 1, totalPages)"
-            :disabled="currentPage === totalPages"
-            class="px-3 py-2 text-sm font-medium rounded-lg disabled:opacity-50 disabled:cursor-not-allowed"
-            :class="currentPage === totalPages ? 'bg-gray-200 text-gray-500' : 'bg-teal-600 text-white hover:bg-teal-700'"
-          >
-            Next
-          </button>
+            <div class="p-6">
+              <div class="flex items-start gap-4 mb-4">
+                <img :src="getAvatar(therapist.id)" class="w-16 h-16 object-cover flex-shrink-0" alt="" />
+                <div class="flex-1 min-w-0">
+                  <h3 class="text-lg font-light text-gray-900 mb-1">{{ therapist.name }}</h3>
+                  <p class="text-sm text-gray-600">{{ therapist.experience }} years</p>
+                </div>
+              </div>
+              
+              <p class="text-sm text-gray-700 mb-4 leading-relaxed line-clamp-3">{{ therapist.bio }}</p>
+              
+              <div class="flex flex-wrap gap-2 mb-4">
+                <span 
+                  v-for="spec in therapist.specializations.slice(0, 3)" 
+                  :key="spec"
+                  class="text-xs text-emerald-700 bg-white px-2 py-1"
+                >
+                  {{ spec }}
+                </span>
+              </div>
+              
+              <div class="flex items-center justify-between pt-4 border-t border-emerald-200">
+                <span class="text-base font-light text-gray-900">KSh {{ therapist.rate.toLocaleString() }}</span>
+                <span class="text-sm text-emerald-700 group-hover:text-emerald-800 font-medium">Book now →</span>
+              </div>
+            </div>
+          </div>
         </div>
       </section>
     </div>
 
     <!-- Booking Modal -->
-    <div v-if="showBookingModal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-      <div class="bg-white rounded-2xl p-6 max-w-md w-full">
-        <div class="flex items-center justify-between mb-4">
-          <h3 class="text-lg font-semibold text-gray-900">Book Session with {{ selectedTherapist?.name }}</h3>
-          <button @click="showBookingModal = false" class="text-gray-400 hover:text-gray-600">
-            <X class="w-5 h-5" />
-          </button>
+    <div v-if="showBookingModal" class="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-6">
+      <div class="bg-white max-w-lg w-full">
+        <div class="p-8 border-b border-gray-200">
+          <div class="flex items-start justify-between">
+            <div>
+              <h3 class="text-2xl font-light text-gray-900 mb-1">Book Session</h3>
+              <p class="text-sm text-gray-500">{{ selectedTherapist?.name }}</p>
+            </div>
+            <button @click="showBookingModal = false" class="text-gray-400 hover:text-gray-900 transition-colors">
+              <X class="w-6 h-6" />
+            </button>
+          </div>
         </div>
-        <div class="space-y-4">
+        
+        <div class="p-8 space-y-6">
           <div>
-            <label class="block text-sm font-medium text-gray-700 mb-2">Select Date & Time</label>
+            <label class="block text-sm font-medium text-gray-900 mb-3">Date & Time</label>
             <input 
               type="datetime-local" 
               v-model="bookingDateTime"
-              class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500"
+              class="w-full px-4 py-3 border border-gray-200 focus:outline-none focus:border-emerald-600 focus:ring-1 focus:ring-emerald-600 transition-colors"
               min="2025-10-22T00:00"
             />
           </div>
           <div>
-            <label class="block text-sm font-medium text-gray-700 mb-2">Session Type</label>
-            <select v-model="bookingType" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500">
-              <option value="individual">Individual Therapy (KSh 5,000)</option>
-              <option value="group">Group Session (KSh 2,500)</option>
-              <option value="family">Family Session (KSh 7,000)</option>
+            <label class="block text-sm font-medium text-gray-900 mb-3">Session Type</label>
+            <select v-model="bookingType" class="w-full px-4 py-3 border border-gray-200 focus:outline-none focus:border-emerald-600 focus:ring-1 focus:ring-emerald-600 transition-colors">
+              <option value="individual">Individual Therapy — KSh 5,000</option>
+              <option value="group">Group Session — KSh 2,500</option>
+              <option value="family">Family Session — KSh 7,000</option>
             </select>
           </div>
           <button 
             @click="confirmBooking"
-            class="w-full bg-teal-600 text-white py-3 px-4 rounded-xl hover:bg-teal-700 transition-colors font-medium"
+            class="w-full bg-emerald-600 text-white py-4 hover:bg-emerald-700 transition-colors font-medium"
           >
             Confirm Booking
           </button>
@@ -245,7 +240,7 @@
 
 <script setup lang="ts">
 import { ref, computed } from 'vue'
-import { Calendar, Users, Search, X, ChevronRight } from 'lucide-vue-next'
+import { Users, Search, X, ChevronRight } from 'lucide-vue-next'
 
 // Import local avatar images
 import av1 from '@/assets/images/av1.jpg'
@@ -269,8 +264,7 @@ const specializations = ['Anxiety', 'Depression', 'Trauma', 'Relationships', 'St
 const therapists = ref([
   { 
     id: 1, 
-    name: 'Dr. Amina Otieno', 
-    initials: 'AO', 
+    name: 'Dr. Amina Otieno',
     bio: 'Experienced in cognitive behavioral therapy with a focus on anxiety and stress management. Licensed for 12 years.', 
     specializations: ['Anxiety', 'Stress Management', 'CBT'], 
     experience: 12, 
@@ -279,8 +273,7 @@ const therapists = ref([
   },
   { 
     id: 2, 
-    name: 'Dr. Kipchoge Kiptoo', 
-    initials: 'KK', 
+    name: 'Dr. Kipchoge Kiptoo',
     bio: 'Specialist in trauma recovery and PTSD treatment using EMDR and somatic approaches.', 
     specializations: ['Trauma', 'PTSD', 'EMDR'], 
     experience: 8, 
@@ -289,8 +282,7 @@ const therapists = ref([
   },
   { 
     id: 3, 
-    name: 'Dr. Muthoni Njoroge', 
-    initials: 'MN', 
+    name: 'Dr. Muthoni Njoroge',
     bio: 'Relationship and family therapist helping couples navigate communication and intimacy challenges.', 
     specializations: ['Relationships', 'Family Therapy', 'Couples'], 
     experience: 15, 
@@ -299,8 +291,7 @@ const therapists = ref([
   },
   { 
     id: 4, 
-    name: 'Dr. Omondi Achieng', 
-    initials: 'OA', 
+    name: 'Dr. Omondi Achieng',
     bio: 'Holistic wellness coach specializing in self-esteem building and positive psychology techniques.', 
     specializations: ['Self-Esteem', 'Positive Psychology', 'Mindfulness'], 
     experience: 10, 
@@ -309,8 +300,7 @@ const therapists = ref([
   },
   { 
     id: 5, 
-    name: 'Dr. Wangari Mwangi', 
-    initials: 'WM', 
+    name: 'Dr. Wangari Mwangi',
     bio: 'Depression specialist using integrative approaches including medication management and therapy.', 
     specializations: ['Depression', 'Integrative Therapy', 'Medication'], 
     experience: 14, 
@@ -319,13 +309,66 @@ const therapists = ref([
   },
   { 
     id: 6, 
-    name: 'Dr. Juma Kiprop', 
-    initials: 'JK', 
+    name: 'Dr. Juma Kiprop',
     bio: 'Adolescent therapist focusing on identity, peer pressure, and academic stress issues.', 
     specializations: ['Adolescents', 'Identity Issues', 'Academic Stress'], 
     experience: 9, 
     availability: 'Available', 
     rate: 5000 
+  },
+  { 
+    id: 7, 
+    name: 'Dr. Njeri Kamau',
+    bio: 'Grief counselor specializing in loss, bereavement, and life transitions with compassionate support.', 
+    specializations: ['Grief', 'Loss', 'Life Transitions'], 
+    experience: 11, 
+    availability: 'Available', 
+    rate: 5500 
+  },
+  { 
+    id: 8, 
+    name: 'Dr. Hassan Mohamed',
+    bio: 'Addiction specialist helping individuals overcome substance abuse and behavioral addictions.', 
+    specializations: ['Addiction', 'Substance Abuse', 'Recovery'], 
+    experience: 13, 
+    availability: 'Available', 
+    rate: 6500 
+  },
+  { 
+    id: 9, 
+    name: 'Dr. Chebet Korir',
+    bio: 'Women\'s mental health specialist addressing postpartum depression, anxiety, and hormonal changes.', 
+    specializations: ['Women\'s Health', 'Postpartum', 'Hormonal Changes'], 
+    experience: 10, 
+    availability: 'Available', 
+    rate: 5800 
+  },
+  { 
+    id: 10, 
+    name: 'Dr. Peter Karanja',
+    bio: 'Career and workplace stress counselor helping professionals manage burnout and work-life balance.', 
+    specializations: ['Career Stress', 'Burnout', 'Work-Life Balance'], 
+    experience: 7, 
+    availability: 'Available', 
+    rate: 4800 
+  },
+  { 
+    id: 11, 
+    name: 'Dr. Akinyi Odhiambo',
+    bio: 'Child psychologist specializing in developmental issues, behavioral problems, and family dynamics.', 
+    specializations: ['Child Psychology', 'Behavioral Issues', 'Family Dynamics'], 
+    experience: 16, 
+    availability: 'Available', 
+    rate: 6200 
+  },
+  { 
+    id: 12, 
+    name: 'Dr. Samuel Maina',
+    bio: 'Mindfulness-based therapist integrating meditation and stress reduction techniques into treatment.', 
+    specializations: ['Mindfulness', 'Meditation', 'Stress Reduction'], 
+    experience: 9, 
+    availability: 'Available', 
+    rate: 5200 
   }
 ])
 
@@ -335,9 +378,8 @@ const getAvatar = (id) => {
   return avatars[(id - 1) % avatars.length]
 }
 
-// Simulate user profile-based recommendations (in real app, this would come from user data)
+// Simulate user profile-based recommendations
 const recommendedTherapists = computed(() => {
-  // For demo, recommend first 2-3 based on 'user profile' (e.g., anxiety focus)
   return therapists.value.filter(t => t.specializations.includes('Anxiety') || t.specializations.includes('Stress Management')).slice(0, 3)
 })
 
@@ -398,13 +440,14 @@ const confirmBooking = async () => {
   overflow: hidden;
 }
 
-.compact-card {
-  height: 300px;
-  display: flex;
-  flex-direction: column;
+.line-clamp-3 {
+  display: -webkit-box;
+  -webkit-line-clamp: 3;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
 }
 
-.compact-card > div {
-  flex: 1;
+input[type="datetime-local"]::-webkit-calendar-picker-indicator {
+  cursor: pointer;
 }
 </style>

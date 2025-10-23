@@ -1,234 +1,199 @@
 <template>
-  <div class="max-w-6xl mx-auto px-6 py-12">
-    <!-- Main Layout: Left Header, Right Form -->
-    <div class="grid grid-cols-1 lg:grid-cols-2 gap-12 items-start">
-      <!-- Left Side: Header and Info -->
-      <div class="space-y-8">
-        <!-- Header -->
-        <div class="space-y-4">
-          <div class="flex items-start space-x-4">
-            <div class="w-12 h-12 bg-emerald-100 rounded-xl flex items-center justify-center flex-shrink-0">
-              <svg class="w-6 h-6 text-emerald-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4" />
+  <div class="min-h-screen bg-white">
+    <div class="max-w-4xl mx-auto px-6 py-16">
+      <!-- Header -->
+      <div class="mb-20">
+        <h1 class="text-5xl font-light text-gray-900 mb-4 tracking-tight">PHQ-9</h1>
+        <p class="text-lg text-gray-500 mb-8 max-w-2xl">Patient Health Questionnaire-9. A comprehensive tool to screen, diagnose, monitor and measure the severity of depression.</p>
+        <div class="text-sm text-gray-400">9 questions · 3-5 minutes</div>
+      </div>
+
+      <!-- Progress Indicator -->
+      <div class="mb-16">
+        <div class="flex items-center gap-2">
+          <div 
+            v-for="i in 9" 
+            :key="i"
+            :class="[
+              'h-1 flex-1 transition-all duration-500',
+              answeredQuestions >= i ? 'bg-emerald-600' : 'bg-gray-200'
+            ]"
+          />
+        </div>
+        <div class="text-sm text-gray-500 mt-3">Question {{ Math.min(answeredQuestions + 1, 9) }} of 9</div>
+      </div>
+
+      <!-- Questions -->
+      <form @submit.prevent="calculateScore" class="space-y-24">
+        <div
+          v-for="(question, index) in questions"
+          :key="index"
+          :ref="el => setQuestionRef(index, el)"
+          class="scroll-mt-32"
+        >
+          <div class="mb-8">
+            <div class="text-sm text-gray-400 mb-3">Question {{ index + 1 }}</div>
+            <h2 class="text-3xl font-light text-gray-900 mb-2">
+              {{ question.text }}
+            </h2>
+            <p class="text-gray-500">Over the last 2 weeks, how often have you been bothered by this?</p>
+          </div>
+
+          <!-- Crisis Warning for Question 9 -->
+          <div 
+            v-if="index === 8 && answers[index] !== null && answers[index] > 0"
+            class="mb-6 p-6 bg-red-50 border-2 border-red-200"
+          >
+            <div class="flex items-start gap-3">
+              <svg class="w-6 h-6 text-red-600 flex-shrink-0 mt-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
               </svg>
-            </div>
-            <div class="flex-1">
-              <h1 class="text-3xl font-bold text-gray-900 mb-2">PHQ-9 Assessment</h1>
-              <p class="text-gray-600">Patient Health Questionnaire - Depression Screening</p>
-            </div>
-          </div>
-          <p class="text-gray-700">
-            This assessment helps screen, diagnose, monitor and measure the severity of depression. It takes about 3-5 minutes to complete.
-          </p>
-        </div>
-
-        <!-- Important Note -->
-        <div class="bg-emerald-50 rounded-xl p-6 border border-emerald-200">
-          <div class="flex items-start space-x-3">
-            <svg class="w-5 h-5 text-emerald-600 flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-            </svg>
-            <div class="text-sm text-emerald-900">
-              <p class="font-semibold mb-1">Over the Last 2 Weeks</p>
-              <p>
-                How often have you been bothered by any of the following problems?
-              </p>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      <!-- Right Side: Scrollable Form -->
-      <div class="space-y-6 max-h-screen overflow-y-auto pr-4 lg:pr-0">
-        <form @submit.prevent="calculateScore" class="space-y-6">
-          <div class="bg-white rounded-2xl shadow-sm border border-gray-200 p-6 lg:p-8">
-            <!-- Questions -->
-            <div class="space-y-6">
-              <div 
-                v-for="(question, index) in questions" 
-                :key="index"
-                :ref="el => setQuestionRef(index, el)"
-                class="pb-6 border-b border-gray-200 last:border-b-0 last:pb-0"
-              >
-                <div class="mb-4">
-                  <div class="inline-block bg-emerald-100 rounded-lg px-3 py-1 mb-2">
-                    <span class="text-emerald-800 font-black text-lg">{{ index + 1 }}</span>
-                  </div>
-                  <label class="block text-base font-medium text-gray-900">
-                    {{ question.text }}
-                  </label>
-                </div>
-                
-                <!-- Warning for Question 9 -->
-                <div 
-                  v-if="index === 8 && answers[index] !== null && answers[index] > 0"
-                  class="mb-3 p-3 bg-red-50 border border-red-200 rounded-lg flex items-start space-x-2"
-                >
-                  <svg class="w-5 h-5 text-red-600 flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
-                  </svg>
-                  <p class="text-sm text-red-800">
-                    <strong>Important:</strong> Your response indicates thoughts of self-harm. Please seek immediate help from a mental health professional or call a crisis helpline.
-                  </p>
-                </div>
-
-                <div class="grid grid-cols-2 lg:grid-cols-4 gap-2">
-                  <label
-                    v-for="option in options"
-                    :key="option.value"
-                    :class="[
-                      'flex flex-col items-center justify-center p-3 border-2 rounded-lg cursor-pointer transition-all duration-200',
-                      answers[index] === option.value
-                        ? 'border-emerald-500 bg-emerald-50 shadow-md'
-                        : 'border-gray-200 hover:border-emerald-300 hover:bg-gray-50'
-                    ]"
-                  >
-                    <input
-                      type="radio"
-                      v-model="answers[index]"
-                      :value="option.value"
-                      class="sr-only"
-                      required
-                      @change="onAnswerChange(index)"
-                    />
-                    <span class="text-sm font-medium text-gray-900 text-center">{{ option.label }}</span>
-                    <span class="text-xs text-gray-500 mt-1">+{{ option.value }}</span>
-                  </label>
+              <div>
+                <p class="text-base font-medium text-red-900 mb-2">Immediate help is available</p>
+                <p class="text-sm text-red-800 mb-3">Your response indicates thoughts of self-harm. Please reach out for help immediately.</p>
+                <div class="space-y-1 text-sm text-red-900">
+                  <p><strong>Crisis Line:</strong> 988 (24/7)</p>
+                  <p><strong>Text:</strong> "HELLO" to 741741</p>
+                  <p><strong>Emergency:</strong> Call 911</p>
                 </div>
               </div>
             </div>
-
-            <!-- Submit Button -->
-            <div class="flex justify-center mt-8 pt-6 border-t border-gray-200 sticky bottom-0 bg-white py-4">
-              <button
-                type="submit"
-                class="px-8 py-3 bg-emerald-600 text-white font-semibold rounded-lg hover:bg-emerald-700 transition-colors duration-200 shadow-md hover:shadow-lg disabled:bg-gray-400 disabled:cursor-not-allowed"
-                :disabled="!allAnswered"
-              >
-                Calculate My Score
-              </button>
-            </div>
           </div>
-        </form>
-      </div>
-    </div>
-
-    <!-- Results Section (Full Width Below) -->
-    <div v-if="showResults" class="mt-16 space-y-6 animate-fadeIn">
-      <!-- Score Display -->
-      <div class="bg-emerald-500 rounded-2xl p-8 text-white shadow-lg">
-        <div class="text-center">
-          <p class="text-emerald-100 text-sm font-medium uppercase tracking-wide mb-2">Your Total Score</p>
-          <p class="text-6xl font-bold mb-2">{{ totalScore }}</p>
-          <p class="text-emerald-100 text-sm">out of 27 points</p>
-          <div class="mt-4 inline-block px-4 py-2 bg-white/20 rounded-full backdrop-blur-sm">
-            <p class="text-sm font-semibold">{{ severityLevel }}</p>
+          
+          <div class="space-y-3">
+            <label
+              v-for="option in options"
+              :key="option.value"
+              :class="[
+                'group block p-6 border-2 cursor-pointer transition-all duration-200',
+                answers[index] === option.value
+                  ? 'border-emerald-600 bg-emerald-50/50'
+                  : 'border-gray-200 hover:border-gray-400'
+              ]"
+            >
+              <input
+                type="radio"
+                v-model="answers[index]"
+                :value="option.value"
+                class="sr-only"
+                required
+                @change="onAnswerChange(index)"
+              />
+              <div class="flex items-center justify-between">
+                <span class="text-lg text-gray-900">{{ option.label }}</span>
+                <div :class="[
+                  'w-5 h-5 border-2 rounded-full transition-all',
+                  answers[index] === option.value
+                    ? 'border-emerald-600 bg-emerald-600'
+                    : 'border-gray-300 group-hover:border-gray-400'
+                ]">
+                  <div v-if="answers[index] === option.value" class="w-full h-full rounded-full bg-white scale-[0.4]" />
+                </div>
+              </div>
+            </label>
           </div>
         </div>
-      </div>
 
-      <!-- Interpretation & Recommendations -->
-      <div class="bg-white rounded-2xl shadow-sm border border-gray-200 overflow-hidden">
-        <div :class="['px-6 py-4 border-l-4', severityColor]">
-          <div class="flex items-start space-x-3">
-            <component :is="severityIcon" :class="['w-6 h-6 flex-shrink-0 mt-1', severityIconColor]" />
-            <div class="flex-1">
-              <h3 class="text-xl font-bold text-gray-900 mb-2">{{ interpretationTitle }}</h3>
-              <p class="text-gray-700 mb-4">{{ interpretationText }}</p>
-              
-              <!-- Treatment Recommendation -->
-              <div class="bg-gray-50 rounded-lg p-4 mt-4">
-                <p class="text-sm font-semibold text-gray-900 mb-2">Recommended Actions:</p>
-                <p class="text-sm text-gray-700">{{ treatmentActions }}</p>
+        <!-- Submit Button -->
+        <div v-if="allAnswered" class="pt-12 border-t border-gray-200">
+          <button
+            type="submit"
+            class="w-full bg-emerald-600 text-white py-5 text-lg hover:bg-emerald-700 transition-colors disabled:bg-gray-300 disabled:cursor-not-allowed"
+          >
+            View Results
+          </button>
+        </div>
+      </form>
+
+      <!-- Results Section -->
+      <div v-if="showResults" class="mt-32 pt-32 border-t border-gray-200">
+        <!-- Score -->
+        <div class="mb-20">
+          <div class="text-sm text-gray-400 mb-4">Your Score</div>
+          <div class="flex items-baseline gap-4 mb-8">
+            <span class="text-8xl font-light text-gray-900">{{ totalScore }}</span>
+            <span class="text-3xl text-gray-400">/ 27</span>
+          </div>
+          
+          <div class="max-w-2xl">
+            <h3 class="text-2xl font-light text-gray-900 mb-4">{{ severityLevel }}</h3>
+            <p class="text-lg text-gray-600 leading-relaxed mb-6">{{ interpretationText }}</p>
+            
+            <div class="p-6 bg-gray-50 border-l-4" :class="severityBorderColor">
+              <p class="text-sm font-medium text-gray-900 mb-2">Recommended Actions</p>
+              <p class="text-sm text-gray-700">{{ treatmentActions }}</p>
+            </div>
+          </div>
+        </div>
+
+        <!-- Severity Scale -->
+        <div class="mb-20 py-12 border-y border-gray-200">
+          <h4 class="text-sm uppercase tracking-wider text-gray-500 mb-8">Depression Severity Scale</h4>
+          <div class="space-y-4">
+            <div 
+              v-for="level in severityLevels" 
+              :key="level.range"
+              :class="[
+                'p-6 border-2 transition-all',
+                isInRange(level.min, level.max) ? 'border-emerald-600 bg-emerald-50/50' : 'border-gray-200'
+              ]"
+            >
+              <div class="flex items-start justify-between mb-3">
+                <div>
+                  <h5 class="text-lg font-medium text-gray-900 mb-1">{{ level.title }}</h5>
+                  <p class="text-sm text-gray-600">{{ level.actions }}</p>
+                </div>
+                <div class="text-right">
+                  <div class="text-2xl font-light text-gray-900">{{ level.range }}</div>
+                  <div class="text-sm text-gray-500">points</div>
+                </div>
               </div>
             </div>
           </div>
         </div>
-      </div>
 
-      <!-- Severity Reference Table - Compact -->
-      <details class="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
-        <summary class="px-6 py-4 cursor-pointer hover:bg-gray-50 transition-colors font-semibold text-gray-900 flex items-center justify-between">
-          <span>View All Severity Levels & Recommendations</span>
-          <svg class="w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
-          </svg>
-        </summary>
-        <div class="px-6 pb-4">
-          <div class="overflow-x-auto">
-            <table class="w-full text-sm">
-              <thead class="border-b-2 border-gray-200">
-                <tr>
-                  <th class="text-left py-3 font-semibold text-gray-900">Score Range</th>
-                  <th class="text-left py-3 font-semibold text-gray-900">Severity</th>
-                  <th class="text-left py-3 font-semibold text-gray-900">Recommended Actions</th>
-                </tr>
-              </thead>
-              <tbody class="divide-y divide-gray-100">
-                <tr v-for="row in severityTable" :key="row.range" class="hover:bg-gray-50">
-                  <td class="py-3 font-medium text-gray-900">{{ row.range }}</td>
-                  <td class="py-3 text-gray-700">{{ row.severity }}</td>
-                  <td class="py-3 text-gray-600">{{ row.actions }}</td>
-                </tr>
-              </tbody>
-            </table>
+        <!-- Clinical Information -->
+        <div class="mb-20 py-12 border-b border-gray-200">
+          <h4 class="text-sm uppercase tracking-wider text-gray-500 mb-8">About PHQ-9 Scoring</h4>
+          <div class="max-w-2xl space-y-6 text-gray-600">
+            <p>
+              <span class="font-medium text-gray-900">Purpose:</span> The PHQ-9 is a multipurpose instrument for screening, diagnosing, monitoring and measuring the severity of depression.
+            </p>
+            <p>
+              <span class="font-medium text-gray-900">Scoring:</span> Each of the 9 items is scored from 0 (not at all) to 3 (nearly every day), providing a total score range of 0-27.
+            </p>
+            <p>
+              <span class="font-medium text-gray-900">Important Note:</span> This tool is designed for initial screening and monitoring. A comprehensive clinical evaluation is necessary for proper diagnosis and treatment planning.
+            </p>
           </div>
         </div>
-      </details>
 
-      <!-- Action Buttons -->
-      <div class="flex flex-col sm:flex-row gap-3">
-        <button
-          @click="resetAssessment"
-          class="flex-1 px-6 py-3 bg-gray-100 text-gray-700 font-medium rounded-lg hover:bg-gray-200 transition-colors duration-200"
-        >
-          Retake Assessment
-        </button>
-        <button
-          @click="saveResults"
-          class="flex-1 px-6 py-3 bg-emerald-600 text-white font-medium rounded-lg hover:bg-emerald-700 transition-colors duration-200"
-        >
-          Save Results
-        </button>
-        <button
-          v-if="totalScore >= 10"
-          @click="bookAppointment"
-          class="flex-1 px-6 py-3 bg-emerald-700 text-white font-medium rounded-lg hover:bg-emerald-800 transition-colors duration-200"
-        >
-          Book Appointment
-        </button>
-      </div>
-    </div>
-
-    <!-- Crisis Resources Banner -->
-    <div v-if="showCrisisWarning" class="mt-6 bg-red-50 rounded-xl p-5 border-2 border-red-200">
-      <div class="flex items-start space-x-3">
-        <svg class="w-6 h-6 text-red-600 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
-        </svg>
-        <div>
-          <p class="font-bold text-red-900 mb-2">Immediate Help Available</p>
-          <p class="text-sm text-red-800 mb-3">
-            If you're having thoughts of self-harm or suicide, please reach out for help immediately:
-          </p>
-          <div class="space-y-2 text-sm">
-            <p class="text-red-900"><strong>National Suicide Prevention Lifeline:</strong> 988 (24/7)</p>
-            <p class="text-red-900"><strong>Crisis Text Line:</strong> Text "HELLO" to 741741</p>
-            <p class="text-red-900"><strong>Emergency:</strong> Call 911 or go to nearest emergency room</p>
-          </div>
+        <!-- Actions -->
+        <div class="flex gap-4">
+          <button
+            @click="resetAssessment"
+            class="flex-1 py-4 border-2 border-gray-900 text-gray-900 hover:bg-gray-900 hover:text-white transition-colors"
+          >
+            Retake Assessment
+          </button>
+          <button
+            @click="saveResults"
+            class="flex-1 py-4 bg-emerald-600 text-white hover:bg-emerald-700 transition-colors"
+          >
+            Save Results
+          </button>
+          <button
+            v-if="totalScore >= 10"
+            @click="bookAppointment"
+            class="flex-1 py-4 bg-emerald-700 text-white hover:bg-emerald-800 transition-colors"
+          >
+            Book Appointment
+          </button>
         </div>
-      </div>
-    </div>
 
-    <!-- Disclaimer (Full Width) -->
-    <div class="mt-16 bg-blue-50 rounded-xl p-6 border border-blue-200">
-      <div class="flex items-start space-x-3">
-        <svg class="w-5 h-5 text-blue-600 flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-        </svg>
-        <div class="text-sm text-blue-900">
-          <p class="font-semibold mb-1">Note</p>
-          <p>
+        <!-- Disclaimer -->
+        <div class="mt-20 pt-12 border-t border-gray-200">
+          <p class="text-sm text-gray-500 leading-relaxed">
             This is a screening tool, not a diagnostic instrument. Please consult a qualified mental health professional for proper evaluation and treatment.
           </p>
         </div>
@@ -239,7 +204,6 @@
 
 <script setup lang="ts">
 import { ref, computed, nextTick } from 'vue'
-import { CheckCircle, AlertTriangle, Info, AlertCircle, ChevronDown } from 'lucide-vue-next'
 
 // Questions
 const questions = [
@@ -262,13 +226,13 @@ const options = [
   { label: 'Nearly every day', value: 3 }
 ]
 
-// Severity table
-const severityTable = [
-  { range: '0 – 4', severity: 'None-minimal', actions: 'None' },
-  { range: '5 – 9', severity: 'Mild', actions: 'Watchful waiting; repeat PHQ-9 at follow-up' },
-  { range: '10 – 14', severity: 'Moderate', actions: 'Treatment plan, considering counseling, follow-up and/or pharmacotherapy' },
-  { range: '15 – 19', severity: 'Moderately Severe', actions: 'Active treatment with pharmacotherapy and/or psychotherapy' },
-  { range: '20 – 27', severity: 'Severe', actions: 'Immediate pharmacotherapy and expedited referral to mental health specialist' }
+// Severity levels
+const severityLevels = [
+  { title: 'None-Minimal', range: '0-4', min: 0, max: 4, actions: 'No specific action needed' },
+  { title: 'Mild Depression', range: '5-9', min: 5, max: 9, actions: 'Watchful waiting; repeat PHQ-9 at follow-up' },
+  { title: 'Moderate Depression', range: '10-14', min: 10, max: 14, actions: 'Treatment plan, considering counseling and/or medication' },
+  { title: 'Moderately Severe', range: '15-19', min: 15, max: 19, actions: 'Active treatment with medication and/or psychotherapy' },
+  { title: 'Severe Depression', range: '20-27', min: 20, max: 27, actions: 'Immediate treatment and expedited referral to specialist' }
 ]
 
 // Reactive state
@@ -278,52 +242,30 @@ const showResults = ref(false)
 const totalScore = ref(0)
 
 // Computed properties
+const answeredQuestions = computed(() => {
+  return answers.value.filter(answer => answer !== null).length
+})
+
 const allAnswered = computed(() => {
   return answers.value.every(answer => answer !== null)
 })
 
 const severityLevel = computed(() => {
   const score = totalScore.value
-  if (score <= 4) return 'None-Minimal'
-  if (score <= 9) return 'Mild Depression'
-  if (score <= 14) return 'Moderate Depression'
-  if (score <= 19) return 'Moderately Severe Depression'
-  return 'Severe Depression'
+  if (score <= 4) return 'None-minimal depression'
+  if (score <= 9) return 'Mild depression'
+  if (score <= 14) return 'Moderate depression'
+  if (score <= 19) return 'Moderately severe depression'
+  return 'Severe depression'
 })
 
-const severityColor = computed(() => {
+const severityBorderColor = computed(() => {
   const score = totalScore.value
   if (score <= 4) return 'border-green-500'
   if (score <= 9) return 'border-yellow-500'
   if (score <= 14) return 'border-orange-500'
   if (score <= 19) return 'border-red-500'
   return 'border-red-700'
-})
-
-const severityIcon = computed(() => {
-  const score = totalScore.value
-  if (score <= 4) return CheckCircle
-  if (score <= 9) return Info
-  if (score <= 14) return AlertCircle
-  return AlertTriangle
-})
-
-const severityIconColor = computed(() => {
-  const score = totalScore.value
-  if (score <= 4) return 'text-green-600'
-  if (score <= 9) return 'text-yellow-600'
-  if (score <= 14) return 'text-orange-600'
-  if (score <= 19) return 'text-red-600'
-  return 'text-red-700'
-})
-
-const interpretationTitle = computed(() => {
-  const score = totalScore.value
-  if (score <= 4) return 'Minimal or No Depression'
-  if (score <= 9) return 'Mild Depression'
-  if (score <= 14) return 'Moderate Depression'
-  if (score <= 19) return 'Moderately Severe Depression'
-  return 'Severe Depression'
 })
 
 const interpretationText = computed(() => {
@@ -344,22 +286,32 @@ const treatmentActions = computed(() => {
   return 'Initiate immediate treatment and seek expedited referral to a mental health specialist for comprehensive care.'
 })
 
-const showCrisisWarning = computed(() => {
-  return answers.value[8] !== null && answers.value[8]! > 0
-})
+const isInRange = (min: number, max: number) => {
+  return totalScore.value >= min && totalScore.value <= max
+}
 
 // Methods
-const setQuestionRef = (index, el) => {
+const setQuestionRef = (index: number, el: any) => {
   if (el) {
     questionRefs.value[index] = el
   }
 }
 
-const onAnswerChange = async (index) => {
+const onAnswerChange = async (index: number) => {
   await nextTick()
+  
+  // Scroll to next question or submit button
   const nextIndex = index + 1
   if (nextIndex < questions.length && questionRefs.value[nextIndex]) {
-    questionRefs.value[nextIndex].$el.scrollIntoView({ behavior: 'smooth', block: 'start' })
+    questionRefs.value[nextIndex].scrollIntoView({ behavior: 'smooth', block: 'center' })
+  } else if (allAnswered.value) {
+    // Scroll to submit button
+    setTimeout(() => {
+      const submitButton = document.querySelector('button[type="submit"]')
+      if (submitButton) {
+        submitButton.scrollIntoView({ behavior: 'smooth', block: 'center' })
+      }
+    }, 100)
   }
 }
 
@@ -367,8 +319,9 @@ const calculateScore = () => {
   totalScore.value = answers.value.reduce((sum, answer) => sum + (answer || 0), 0)
   showResults.value = true
   
+  // Scroll to results
   setTimeout(() => {
-    const resultsElement = document.querySelector('.animate-fadeIn')
+    const resultsElement = document.querySelector('.mt-32.pt-32')
     if (resultsElement) {
       resultsElement.scrollIntoView({ behavior: 'smooth', block: 'start' })
     }
@@ -400,47 +353,25 @@ const bookAppointment = () => {
 </script>
 
 <style scoped>
-@keyframes fadeIn {
-  from {
-    opacity: 0;
-    transform: translateY(20px);
+/* Smooth scrolling */
+html {
+  scroll-behavior: smooth;
+}
+
+/* Custom radio button animation */
+input[type="radio"]:checked + div .scale-\[0\.4\] {
+  animation: radioCheck 0.2s ease-out;
+}
+
+@keyframes radioCheck {
+  0% {
+    transform: scale(0);
   }
-  to {
-    opacity: 1;
-    transform: translateY(0);
+  50% {
+    transform: scale(0.5);
   }
-}
-
-.animate-fadeIn {
-  animation: fadeIn 0.5s ease-out;
-}
-
-details > summary {
-  list-style: none;
-}
-
-details > summary::-webkit-details-marker {
-  display: none;
-}
-
-details[open] svg {
-  transform: rotate(180deg);
-}
-
-details svg {
-  transition: transform 0.2s;
-}
-
-/* Custom radio button styling */
-input[type="radio"]:checked + span,
-input[type="radio"]:checked ~ span {
-  transform: scale(1.01);
-}
-
-/* Smooth transitions */
-* {
-  transition-property: background-color, border-color, transform;
-  transition-duration: 200ms;
-  transition-timing-function: ease-in-out;
+  100% {
+    transform: scale(0.4);
+  }
 }
 </style>

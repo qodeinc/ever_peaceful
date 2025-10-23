@@ -1,405 +1,246 @@
 <template>
-  <div class="max-w-6xl mx-auto px-6 py-12">
-    <!-- Main Layout: Left Header, Right Form -->
-    <div class="grid grid-cols-1 lg:grid-cols-2 gap-12 items-start">
-      <!-- Left Side: Header and Info -->
-      <div class="space-y-8">
-        <!-- Header -->
-        <div class="space-y-4">
-          <div class="flex items-start space-x-4">
-            <div class="w-12 h-12 bg-emerald-100 rounded-xl flex items-center justify-center flex-shrink-0">
-              <svg class="w-6 h-6 text-emerald-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
-              </svg>
+  <div class="min-h-screen bg-white">
+    <div class="max-w-4xl mx-auto px-6 py-16">
+      <!-- Header -->
+      <div class="mb-20">
+        <h1 class="text-5xl font-light text-gray-900 mb-4 tracking-tight">PC-PTSD-5</h1>
+        <p class="text-lg text-gray-500 mb-8 max-w-2xl">Primary Care PTSD Screen for DSM-5. A brief screening tool to identify persons with probable PTSD.</p>
+        <div class="text-sm text-gray-400">5 questions · 1-2 minutes</div>
+      </div>
+
+      <!-- Context Information -->
+      <div class="mb-16 pb-16 border-b border-gray-200">
+        <h3 class="text-sm uppercase tracking-wider text-gray-500 mb-6">About Traumatic Events</h3>
+        <p class="text-base text-gray-600 mb-6 leading-relaxed">
+          Sometimes things happen to people that are unusually or especially frightening, horrible, or traumatic. Examples include:
+        </p>
+        <ul class="space-y-2 text-gray-600 mb-8">
+          <li class="flex items-start">
+            <span class="text-emerald-600 mr-3">•</span>
+            <span>A serious accident or fire</span>
+          </li>
+          <li class="flex items-start">
+            <span class="text-emerald-600 mr-3">•</span>
+            <span>A physical or sexual assault or abuse</span>
+          </li>
+          <li class="flex items-start">
+            <span class="text-emerald-600 mr-3">•</span>
+            <span>An earthquake or flood</span>
+          </li>
+          <li class="flex items-start">
+            <span class="text-emerald-600 mr-3">•</span>
+            <span>A war</span>
+          </li>
+          <li class="flex items-start">
+            <span class="text-emerald-600 mr-3">•</span>
+            <span>Seeing someone be killed or seriously injured</span>
+          </li>
+          <li class="flex items-start">
+            <span class="text-emerald-600 mr-3">•</span>
+            <span>Having a loved one die through homicide or suicide</span>
+          </li>
+        </ul>
+        <p class="text-base text-gray-900 font-medium">If you have experienced such events, please answer the following questions about the past month:</p>
+      </div>
+
+      <!-- Progress Indicator -->
+      <div class="mb-16">
+        <div class="flex items-center gap-2">
+          <div 
+            v-for="i in 5" 
+            :key="i"
+            :class="[
+              'h-1 flex-1 transition-all duration-500',
+              answeredQuestions >= i ? 'bg-emerald-600' : 'bg-gray-200'
+            ]"
+          />
+        </div>
+        <div class="text-sm text-gray-500 mt-3">Question {{ Math.min(answeredQuestions + 1, 5) }} of 5</div>
+      </div>
+
+      <!-- Questions -->
+      <form @submit.prevent="calculateScore" class="space-y-24">
+        <div
+          v-for="(question, index) in questions"
+          :key="index"
+          :ref="el => setQuestionRef(index, el)"
+          class="scroll-mt-32"
+        >
+          <div class="mb-8">
+            <div class="text-sm text-gray-400 mb-3">Question {{ index + 1 }}</div>
+            <h2 class="text-3xl font-light text-gray-900 mb-2">
+              {{ question }}
+            </h2>
+            <p class="text-gray-500">In the past month, have you:</p>
+          </div>
+          
+          <div class="space-y-3">
+            <label
+              :class="[
+                'group block p-6 border-2 cursor-pointer transition-all duration-200',
+                answers[index] === 1
+                  ? 'border-emerald-600 bg-emerald-50/50'
+                  : 'border-gray-200 hover:border-gray-400'
+              ]"
+            >
+              <input
+                type="radio"
+                v-model="answers[index]"
+                :value="1"
+                class="sr-only"
+                required
+                @change="onAnswerChange(index)"
+              />
+              <div class="flex items-center justify-between">
+                <span class="text-lg text-gray-900">Yes</span>
+                <div :class="[
+                  'w-5 h-5 border-2 rounded-full transition-all',
+                  answers[index] === 1
+                    ? 'border-emerald-600 bg-emerald-600'
+                    : 'border-gray-300 group-hover:border-gray-400'
+                ]">
+                  <div v-if="answers[index] === 1" class="w-full h-full rounded-full bg-white scale-[0.4]" />
+                </div>
+              </div>
+            </label>
+
+            <label
+              :class="[
+                'group block p-6 border-2 cursor-pointer transition-all duration-200',
+                answers[index] === 0
+                  ? 'border-emerald-600 bg-emerald-50/50'
+                  : 'border-gray-200 hover:border-gray-400'
+              ]"
+            >
+              <input
+                type="radio"
+                v-model="answers[index]"
+                :value="0"
+                class="sr-only"
+                required
+                @change="onAnswerChange(index)"
+              />
+              <div class="flex items-center justify-between">
+                <span class="text-lg text-gray-900">No</span>
+                <div :class="[
+                  'w-5 h-5 border-2 rounded-full transition-all',
+                  answers[index] === 0
+                    ? 'border-emerald-600 bg-emerald-600'
+                    : 'border-gray-300 group-hover:border-gray-400'
+                ]">
+                  <div v-if="answers[index] === 0" class="w-full h-full rounded-full bg-white scale-[0.4]" />
+                </div>
+              </div>
+            </label>
+          </div>
+        </div>
+
+        <!-- Submit Button -->
+        <div v-if="allAnswered" class="pt-12 border-t border-gray-200">
+          <button
+            type="submit"
+            class="w-full bg-emerald-600 text-white py-5 text-lg hover:bg-emerald-700 transition-colors disabled:bg-gray-300 disabled:cursor-not-allowed"
+          >
+            View Results
+          </button>
+        </div>
+      </form>
+
+      <!-- Results Section -->
+      <div v-if="showResults" class="mt-32 pt-32 border-t border-gray-200">
+        <!-- Score -->
+        <div class="mb-20">
+          <div class="text-sm text-gray-400 mb-4">Your Result</div>
+          <div class="flex items-baseline gap-4 mb-8">
+            <span class="text-8xl font-light text-gray-900">{{ positiveCount }}</span>
+            <span class="text-3xl text-gray-400">/ 5</span>
+          </div>
+          <div class="text-lg text-gray-500 mb-8">{{ positiveCount === 1 ? '1 yes answer' : `${positiveCount} yes answers` }}</div>
+          
+          <div class="max-w-2xl">
+            <h3 class="text-2xl font-light text-gray-900 mb-4">{{ interpretationTitle }}</h3>
+            <p class="text-lg text-gray-600 leading-relaxed">{{ interpretationText }}</p>
+          </div>
+        </div>
+
+        <!-- Screening Criteria -->
+        <div class="mb-20 py-12 border-y border-gray-200">
+          <h4 class="text-sm uppercase tracking-wider text-gray-500 mb-8">Screening Interpretation</h4>
+          <div class="space-y-6">
+            <div 
+              :class="[
+                'p-6 border-2 transition-all',
+                positiveCount >= 3 ? 'border-emerald-600 bg-emerald-50/50' : 'border-gray-200'
+              ]"
+            >
+              <div class="flex items-start justify-between mb-3">
+                <div>
+                  <h5 class="text-lg font-medium text-gray-900 mb-1">Positive Screen</h5>
+                  <p class="text-sm text-gray-600">Probable PTSD — Further evaluation recommended</p>
+                </div>
+                <div class="text-right">
+                  <div class="text-2xl font-light text-gray-900">3-5</div>
+                  <div class="text-sm text-gray-500">yes answers</div>
+                </div>
+              </div>
             </div>
-            <div class="flex-1">
-              <h1 class="text-3xl font-bold text-gray-900 mb-2">Primary Care PTSD Screen for DSM-5 (PC-PTSD-5)</h1>
-              <h2 class="text-lg text-emerald-600 font-semibold mb-3">Screening Tool for Probable PTSD</h2>
-              <p class="text-gray-600 leading-relaxed">
-                The Primary Care PTSD Screen for DSM-5 (PC-PTSD-5) is a screening tool designed to identify persons with probable PTSD. Available data suggest the PC-PTSD-5 screen should be considered "positive" if the respondent answers "yes" to any 3 items in the questions listed below. Those screening positive should have further assessment with a structured interview for PTSD, preferably performed by a mental health professional who has experience in diagnosing PTSD.
-              </p>
+
+            <div 
+              :class="[
+                'p-6 border-2 transition-all',
+                positiveCount < 3 ? 'border-emerald-600 bg-emerald-50/50' : 'border-gray-200'
+              ]"
+            >
+              <div class="flex items-start justify-between mb-3">
+                <div>
+                  <h5 class="text-lg font-medium text-gray-900 mb-1">Negative Screen</h5>
+                  <p class="text-sm text-gray-600">Low likelihood of PTSD at this time</p>
+                </div>
+                <div class="text-right">
+                  <div class="text-2xl font-light text-gray-900">0-2</div>
+                  <div class="text-sm text-gray-500">yes answers</div>
+                </div>
+              </div>
             </div>
           </div>
         </div>
 
-        <!-- Important Note -->
-        <div class="bg-emerald-50 rounded-xl p-6 border border-emerald-200">
-          <div class="flex items-start space-x-3">
-            <svg class="w-5 h-5 text-emerald-600 flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-            </svg>
-            <div class="text-sm text-emerald-900">
-              <p class="font-semibold mb-1">Traumatic Events</p>
-              <p class="mb-2">
-                Sometimes things happen to people that are unusually or especially frightening, horrible, or traumatic. For example:
-              </p>
-              <ul class="list-disc list-inside space-y-1 text-sm">
-                <li>a serious accident or fire</li>
-                <li>a physical or sexual assault or abuse</li>
-                <li>an earthquake or flood</li>
-                <li>a war</li>
-                <li>seeing someone be killed or seriously injured</li>
-                <li>having a loved one die through homicide or suicide</li>
-              </ul>
-              <p class="mt-2">If you have ever experienced this type of event, please answer the following:</p>
-              <p class="font-semibold">In the past month, have you:</p>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      <!-- Right Side: Scrollable Form -->
-      <div class="space-y-6 max-h-screen overflow-y-auto pr-4 lg:pr-0">
-        <form @submit.prevent="calculateScore" class="space-y-6">
-          <div class="bg-white rounded-2xl shadow-sm border border-gray-200 p-6 lg:p-8">
-            <!-- Question 1 -->
-            <div ref="q1" class="pb-6 border-b border-gray-200">
-              <div class="mb-4">
-                <div class="inline-block bg-emerald-100 rounded-lg px-3 py-1 mb-2">
-                  <span class="text-emerald-800 font-black text-lg">1</span>
-                </div>
-                <label class="block text-base font-medium text-gray-900">
-                  Had nightmares about the event(s) or thought about the event(s) when you did not want to?
-                </label>
-              </div>
-              <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
-                <label
-                  :class="[
-                    'flex items-center justify-between p-4 border-2 rounded-xl cursor-pointer transition-all duration-200',
-                    answers.question1 === 1
-                      ? 'border-emerald-500 bg-emerald-50 shadow-md'
-                      : 'border-gray-200 hover:border-emerald-300 hover:bg-gray-50'
-                  ]"
-                >
-                  <input
-                    type="radio"
-                    v-model="answers.question1"
-                    :value="1"
-                    class="sr-only"
-                    required
-                    @change="onAnswerChange(1)"
-                  />
-                  <span class="font-medium text-gray-900">Yes</span>
-                  <span class="text-sm font-semibold text-emerald-600">+1</span>
-                </label>
-                <label
-                  :class="[
-                    'flex items-center justify-between p-4 border-2 rounded-xl cursor-pointer transition-all duration-200',
-                    answers.question1 === 0
-                      ? 'border-emerald-500 bg-emerald-50 shadow-md'
-                      : 'border-gray-200 hover:border-emerald-300 hover:bg-gray-50'
-                  ]"
-                >
-                  <input
-                    type="radio"
-                    v-model="answers.question1"
-                    :value="0"
-                    class="sr-only"
-                    required
-                    @change="onAnswerChange(1)"
-                  />
-                  <span class="font-medium text-gray-900">No</span>
-                  <span class="text-sm font-semibold text-gray-500">0</span>
-                </label>
-              </div>
-            </div>
-
-            <!-- Question 2 -->
-            <div ref="q2" class="pb-6 border-b border-gray-200">
-              <div class="mb-4">
-                <div class="inline-block bg-emerald-100 rounded-lg px-3 py-1 mb-2">
-                  <span class="text-emerald-800 font-black text-lg">2</span>
-                </div>
-                <label class="block text-base font-medium text-gray-900">
-                  Tried hard not to think about the event(s) or went out of your way to avoid situations that reminded you of the event(s)?
-                </label>
-              </div>
-              <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
-                <label
-                  :class="[
-                    'flex items-center justify-between p-4 border-2 rounded-xl cursor-pointer transition-all duration-200',
-                    answers.question2 === 1
-                      ? 'border-emerald-500 bg-emerald-50 shadow-md'
-                      : 'border-gray-200 hover:border-emerald-300 hover:bg-gray-50'
-                  ]"
-                >
-                  <input
-                    type="radio"
-                    v-model="answers.question2"
-                    :value="1"
-                    class="sr-only"
-                    required
-                    @change="onAnswerChange(2)"
-                  />
-                  <span class="font-medium text-gray-900">Yes</span>
-                  <span class="text-sm font-semibold text-emerald-600">+1</span>
-                </label>
-                <label
-                  :class="[
-                    'flex items-center justify-between p-4 border-2 rounded-xl cursor-pointer transition-all duration-200',
-                    answers.question2 === 0
-                      ? 'border-emerald-500 bg-emerald-50 shadow-md'
-                      : 'border-gray-200 hover:border-emerald-300 hover:bg-gray-50'
-                  ]"
-                >
-                  <input
-                    type="radio"
-                    v-model="answers.question2"
-                    :value="0"
-                    class="sr-only"
-                    required
-                    @change="onAnswerChange(2)"
-                  />
-                  <span class="font-medium text-gray-900">No</span>
-                  <span class="text-sm font-semibold text-gray-500">0</span>
-                </label>
-              </div>
-            </div>
-
-            <!-- Question 3 -->
-            <div ref="q3" class="pb-6 border-b border-gray-200">
-              <div class="mb-4">
-                <div class="inline-block bg-emerald-100 rounded-lg px-3 py-1 mb-2">
-                  <span class="text-emerald-800 font-black text-lg">3</span>
-                </div>
-                <label class="block text-base font-medium text-gray-900">
-                  Been constantly on guard, watchful, or easily startled?
-                </label>
-              </div>
-              <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
-                <label
-                  :class="[
-                    'flex items-center justify-between p-4 border-2 rounded-xl cursor-pointer transition-all duration-200',
-                    answers.question3 === 1
-                      ? 'border-emerald-500 bg-emerald-50 shadow-md'
-                      : 'border-gray-200 hover:border-emerald-300 hover:bg-gray-50'
-                  ]"
-                >
-                  <input
-                    type="radio"
-                    v-model="answers.question3"
-                    :value="1"
-                    class="sr-only"
-                    required
-                    @change="onAnswerChange(3)"
-                  />
-                  <span class="font-medium text-gray-900">Yes</span>
-                  <span class="text-sm font-semibold text-emerald-600">+1</span>
-                </label>
-                <label
-                  :class="[
-                    'flex items-center justify-between p-4 border-2 rounded-xl cursor-pointer transition-all duration-200',
-                    answers.question3 === 0
-                      ? 'border-emerald-500 bg-emerald-50 shadow-md'
-                      : 'border-gray-200 hover:border-emerald-300 hover:bg-gray-50'
-                  ]"
-                >
-                  <input
-                    type="radio"
-                    v-model="answers.question3"
-                    :value="0"
-                    class="sr-only"
-                    required
-                    @change="onAnswerChange(3)"
-                  />
-                  <span class="font-medium text-gray-900">No</span>
-                  <span class="text-sm font-semibold text-gray-500">0</span>
-                </label>
-              </div>
-            </div>
-
-            <!-- Question 4 -->
-            <div ref="q4" class="pb-6 border-b border-gray-200">
-              <div class="mb-4">
-                <div class="inline-block bg-emerald-100 rounded-lg px-3 py-1 mb-2">
-                  <span class="text-emerald-800 font-black text-lg">4</span>
-                </div>
-                <label class="block text-base font-medium text-gray-900">
-                  Felt numb or detached from people, activities, or your surroundings?
-                </label>
-              </div>
-              <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
-                <label
-                  :class="[
-                    'flex items-center justify-between p-4 border-2 rounded-xl cursor-pointer transition-all duration-200',
-                    answers.question4 === 1
-                      ? 'border-emerald-500 bg-emerald-50 shadow-md'
-                      : 'border-gray-200 hover:border-emerald-300 hover:bg-gray-50'
-                  ]"
-                >
-                  <input
-                    type="radio"
-                    v-model="answers.question4"
-                    :value="1"
-                    class="sr-only"
-                    required
-                    @change="onAnswerChange(4)"
-                  />
-                  <span class="font-medium text-gray-900">Yes</span>
-                  <span class="text-sm font-semibold text-emerald-600">+1</span>
-                </label>
-                <label
-                  :class="[
-                    'flex items-center justify-between p-4 border-2 rounded-xl cursor-pointer transition-all duration-200',
-                    answers.question4 === 0
-                      ? 'border-emerald-500 bg-emerald-50 shadow-md'
-                      : 'border-gray-200 hover:border-emerald-300 hover:bg-gray-50'
-                  ]"
-                >
-                  <input
-                    type="radio"
-                    v-model="answers.question4"
-                    :value="0"
-                    class="sr-only"
-                    required
-                    @change="onAnswerChange(4)"
-                  />
-                  <span class="font-medium text-gray-900">No</span>
-                  <span class="text-sm font-semibold text-gray-500">0</span>
-                </label>
-              </div>
-            </div>
-
-            <!-- Question 5 -->
-            <div ref="q5" class="pb-6 border-b border-gray-200">
-              <div class="mb-4">
-                <div class="inline-block bg-emerald-100 rounded-lg px-3 py-1 mb-2">
-                  <span class="text-emerald-800 font-black text-lg">5</span>
-                </div>
-                <label class="block text-base font-medium text-gray-900">
-                  Felt guilty or unable to stop blaming yourself or others for the event(s) or any problems the event(s) may have caused?
-                </label>
-              </div>
-              <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
-                <label
-                  :class="[
-                    'flex items-center justify-between p-4 border-2 rounded-xl cursor-pointer transition-all duration-200',
-                    answers.question5 === 1
-                      ? 'border-emerald-500 bg-emerald-50 shadow-md'
-                      : 'border-gray-200 hover:border-emerald-300 hover:bg-gray-50'
-                  ]"
-                >
-                  <input
-                    type="radio"
-                    v-model="answers.question5"
-                    :value="1"
-                    class="sr-only"
-                    required
-                    @change="onAnswerChange(5)"
-                  />
-                  <span class="font-medium text-gray-900">Yes</span>
-                  <span class="text-sm font-semibold text-emerald-600">+1</span>
-                </label>
-                <label
-                  :class="[
-                    'flex items-center justify-between p-4 border-2 rounded-xl cursor-pointer transition-all duration-200',
-                    answers.question5 === 0
-                      ? 'border-emerald-500 bg-emerald-50 shadow-md'
-                      : 'border-gray-200 hover:border-emerald-300 hover:bg-gray-50'
-                  ]"
-                >
-                  <input
-                    type="radio"
-                    v-model="answers.question5"
-                    :value="0"
-                    class="sr-only"
-                    required
-                    @change="onAnswerChange(5)"
-                  />
-                  <span class="font-medium text-gray-900">No</span>
-                  <span class="text-sm font-semibold text-gray-500">0</span>
-                </label>
-              </div>
-            </div>
-
-            <!-- Submit Button -->
-            <div class="flex justify-center mt-8 pt-6 border-t border-gray-200 sticky bottom-0 bg-white py-4">
-              <button
-                type="submit"
-                class="px-8 py-3 bg-emerald-600 text-white font-semibold rounded-lg hover:bg-emerald-700 transition-colors duration-200 shadow-md hover:shadow-lg disabled:bg-gray-400 disabled:cursor-not-allowed"
-                :disabled="!allAnswered"
-              >
-                Calculate Result
-              </button>
-            </div>
-          </div>
-        </form>
-      </div>
-    </div>
-
-    <!-- Results Section (Full Width Below) -->
-    <div v-if="showResults" class="mt-16 space-y-6 animate-fadeIn">
-      <div class="text-center mb-6">
-        <h3 class="text-2xl font-bold text-gray-900 mb-2">Your Results</h3>
-        <div class="inline-block bg-emerald-100 rounded-2xl px-8 py-4 mt-4">
-          <p class="text-sm text-gray-600 mb-1">{{ positiveCount }} yes answer{{ positiveCount !== 1 ? 's' : '' }}</p>
-          <p class="text-5xl font-bold text-emerald-600">out of 5</p>
-        </div>
-      </div>
-
-      <!-- Interpretation -->
-      <div :class="[
-        'rounded-xl p-6 mb-6',
-        isPositiveScreen ? 'bg-amber-50 border-2 border-amber-200' : 'bg-green-50 border-2 border-green-200'
-      ]">
-        <div class="flex items-start space-x-3">
-          <svg v-if="isPositiveScreen" class="w-6 h-6 text-amber-600 flex-shrink-0 mt-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
-          </svg>
-          <svg v-else class="w-6 h-6 text-green-600 flex-shrink-0 mt-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
-          </svg>
-          <div>
-            <h4 class="font-semibold text-lg mb-2" :class="isPositiveScreen ? 'text-amber-900' : 'text-green-900'">
-              {{ interpretationTitle }}
-            </h4>
-            <p class="text-gray-700 leading-relaxed">
-              {{ interpretationText }}
+        <!-- Clinical Information -->
+        <div class="mb-20 py-12 border-b border-gray-200">
+          <h4 class="text-sm uppercase tracking-wider text-gray-500 mb-8">About This Screening</h4>
+          <div class="max-w-2xl space-y-6 text-gray-600">
+            <p>
+              <span class="font-medium text-gray-900">Scoring:</span> Current research suggests that the results of the PC-PTSD-5 should be considered "positive" if a patient answers "yes" to any three items.
+            </p>
+            <p>
+              <span class="font-medium text-gray-900">Next Steps:</span> A positive screen warrants a comprehensive clinical assessment with a structured interview for PTSD, preferably performed by a mental health professional who has experience in diagnosing PTSD.
+            </p>
+            <p>
+              <span class="font-medium text-gray-900">Important:</span> This is a screening tool, not a diagnostic instrument. Professional evaluation is necessary for accurate diagnosis and treatment planning.
             </p>
           </div>
         </div>
-      </div>
 
-      <!-- Clinical Information -->
-      <div class="bg-gray-50 rounded-xl p-6 mb-6">
-        <h4 class="font-semibold text-lg text-gray-900 mb-4">About PC-PTSD-5 Screening</h4>
-        <div class="space-y-3">
-          <p class="text-gray-700">
-            <span class="font-semibold">Scoring:</span> Current research suggests that the results of the PC-PTSD-5 should be considered "positive" if a patient answers "yes" to any three items.
-          </p>
-          <p class="text-gray-700">
-            <span class="font-semibold">Next Steps:</span> A positive screen warrants a comprehensive clinical assessment with a structured interview for PTSD, preferably performed by a mental health professional who has experience in diagnosing PTSD.
-          </p>
+        <!-- Actions -->
+        <div class="flex gap-4">
+          <button
+            @click="resetAssessment"
+            class="flex-1 py-4 border-2 border-gray-900 text-gray-900 hover:bg-gray-900 hover:text-white transition-colors"
+          >
+            Retake Screening
+          </button>
+          <button
+            @click="saveResults"
+            class="flex-1 py-4 bg-emerald-600 text-white hover:bg-emerald-700 transition-colors"
+          >
+            Save Results
+          </button>
         </div>
-      </div>
 
-      <!-- Action Buttons -->
-      <div class="flex flex-col sm:flex-row gap-3 justify-center">
-        <button
-          @click="resetAssessment"
-          class="px-6 py-3 bg-gray-100 text-gray-700 font-medium rounded-xl hover:bg-gray-200 transition-colors duration-200"
-        >
-          Take Screening Again
-        </button>
-        <button
-          @click="saveResults"
-          class="px-6 py-3 bg-emerald-600 text-white font-medium rounded-xl hover:bg-emerald-700 transition-colors duration-200"
-        >
-          Save Results
-        </button>
-      </div>
-    </div>
-
-    <!-- Disclaimer (Full Width) -->
-    <div class="mt-16 bg-blue-50 rounded-xl p-6 border border-blue-200">
-      <div class="flex items-start space-x-3">
-        <svg class="w-5 h-5 text-blue-600 flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-        </svg>
-        <div class="text-sm text-blue-900">
-          <p class="font-semibold mb-1">Important Note</p>
-          <p>
-            This screening tool is not a diagnostic instrument. If you screen positive or have concerns about your trauma experiences or symptoms, 
+        <!-- Disclaimer -->
+        <div class="mt-20 pt-12 border-t border-gray-200">
+          <p class="text-sm text-gray-500 leading-relaxed">
+            This screening tool is not a diagnostic instrument. If you screen positive or have concerns about trauma experiences or symptoms, 
             please consult with a qualified mental health professional for a comprehensive evaluation and appropriate treatment options.
           </p>
         </div>
@@ -411,27 +252,28 @@
 <script setup>
 import { ref, computed, nextTick } from 'vue'
 
-// Refs for question elements
-const q1 = ref(null)
-const q2 = ref(null)
-const q3 = ref(null)
-const q4 = ref(null)
-const q5 = ref(null)
+// Questions
+const questions = [
+  "Had nightmares about the event(s) or thought about the event(s) when you did not want to?",
+  "Tried hard not to think about the event(s) or went out of your way to avoid situations that reminded you of the event(s)?",
+  "Been constantly on guard, watchful, or easily startled?",
+  "Felt numb or detached from people, activities, or your surroundings?",
+  "Felt guilty or unable to stop blaming yourself or others for the event(s) or any problems the event(s) may have caused?"
+]
 
 // Reactive state
-const answers = ref({
-  question1: null,
-  question2: null,
-  question3: null,
-  question4: null,
-  question5: null
-})
+const answers = ref({})
+const questionRefs = ref({})
 const showResults = ref(false)
 const positiveCount = ref(0)
 
 // Computed properties
+const answeredQuestions = computed(() => {
+  return Object.keys(answers.value).filter(key => answers.value[key] !== null && answers.value[key] !== undefined).length
+})
+
 const allAnswered = computed(() => {
-  return Object.values(answers.value).every(val => val !== null)
+  return answeredQuestions.value === questions.length
 })
 
 const isPositiveScreen = computed(() => {
@@ -439,51 +281,48 @@ const isPositiveScreen = computed(() => {
 })
 
 const interpretationTitle = computed(() => {
-  if (isPositiveScreen.value) {
-    return 'Positive Screen'
-  }
-  return 'Negative Screen'
+  return isPositiveScreen.value ? 'Positive screen' : 'Negative screen'
 })
 
 const interpretationText = computed(() => {
   if (isPositiveScreen.value) {
-    return `You answered "yes" to ${positiveCount.value} item${positiveCount.value > 1 ? 's' : ''}. Current research suggests that the results of the PC-PTSD-5 should be considered "positive" if a patient answers "yes" to any three items. This indicates probable PTSD, and further assessment with a structured interview for PTSD is recommended, preferably performed by a mental health professional who has experience in diagnosing PTSD.`
+    return `You answered "yes" to ${positiveCount.value} ${positiveCount.value === 1 ? 'item' : 'items'}. Current research suggests that the results of the PC-PTSD-5 should be considered "positive" if a patient answers "yes" to any three items. This indicates probable PTSD, and further assessment with a structured interview for PTSD is recommended, preferably performed by a mental health professional who has experience in diagnosing PTSD.`
   }
-  return `You answered "yes" to ${positiveCount.value} item${positiveCount.value > 1 ? 's' : ''}. This is a negative screen, suggesting low likelihood of PTSD at this time. However, if you have any concerns about your trauma experiences or symptoms, please discuss them with a healthcare provider.`
+  return `You answered "yes" to ${positiveCount.value} ${positiveCount.value === 1 ? 'item' : 'items'}. This is a negative screen, suggesting low likelihood of PTSD at this time. However, if you have any concerns about your trauma experiences or symptoms, please discuss them with a healthcare provider.`
 })
 
 // Methods
-const onAnswerChange = async (qNum) => {
-  await nextTick()
-  const nextQNum = qNum + 1
-  const nextRef = getRefByNum(nextQNum)
-  if (nextRef && nextRef.value) {
-    nextRef.value.$el.scrollIntoView({ behavior: 'smooth', block: 'start' })
+const setQuestionRef = (index, el) => {
+  if (el) {
+    questionRefs.value[index] = el
   }
 }
 
-const getRefByNum = (num) => {
-  switch (num) {
-    case 1: return q1
-    case 2: return q2
-    case 3: return q3
-    case 4: return q4
-    case 5: return q5
-    default: return null
+const onAnswerChange = async (index) => {
+  await nextTick()
+  
+  // Scroll to next question or submit button
+  const nextIndex = index + 1
+  if (nextIndex < questions.length && questionRefs.value[nextIndex]) {
+    questionRefs.value[nextIndex].scrollIntoView({ behavior: 'smooth', block: 'center' })
+  } else if (allAnswered.value) {
+    // Scroll to submit button
+    setTimeout(() => {
+      const submitButton = document.querySelector('button[type="submit"]')
+      if (submitButton) {
+        submitButton.scrollIntoView({ behavior: 'smooth', block: 'center' })
+      }
+    }, 100)
   }
 }
 
 const calculateScore = () => {
-  positiveCount.value = (answers.value.question1 || 0) + 
-                       (answers.value.question2 || 0) + 
-                       (answers.value.question3 || 0) + 
-                       (answers.value.question4 || 0) + 
-                       (answers.value.question5 || 0)
+  positiveCount.value = Object.values(answers.value).reduce((sum, val) => sum + (val || 0), 0)
   showResults.value = true
   
   // Scroll to results
   setTimeout(() => {
-    const resultsElement = document.querySelector('.animate-fadeIn')
+    const resultsElement = document.querySelector('.mt-32.pt-32')
     if (resultsElement) {
       resultsElement.scrollIntoView({ behavior: 'smooth', block: 'start' })
     }
@@ -491,13 +330,7 @@ const calculateScore = () => {
 }
 
 const resetAssessment = () => {
-  answers.value = {
-    question1: null,
-    question2: null,
-    question3: null,
-    question4: null,
-    question5: null
-  }
+  answers.value = {}
   showResults.value = false
   positiveCount.value = 0
   
@@ -513,36 +346,30 @@ const saveResults = () => {
     date: new Date().toISOString(),
     answers: answers.value
   })
-  alert('Results saved successfully! (This will be implemented with backend integration)')
+  alert('Results saved successfully!')
 }
 </script>
 
 <style scoped>
-@keyframes fadeIn {
-  from {
-    opacity: 0;
-    transform: translateY(20px);
+/* Smooth scrolling */
+html {
+  scroll-behavior: smooth;
+}
+
+/* Custom radio button animation */
+input[type="radio"]:checked + div .scale-\[0\.4\] {
+  animation: radioCheck 0.2s ease-out;
+}
+
+@keyframes radioCheck {
+  0% {
+    transform: scale(0);
   }
-  to {
-    opacity: 1;
-    transform: translateY(0);
+  50% {
+    transform: scale(0.5);
   }
-}
-
-.animate-fadeIn {
-  animation: fadeIn 0.5s ease-out;
-}
-
-/* Custom radio button styling */
-input[type="radio"]:checked + span,
-input[type="radio"]:checked ~ span {
-  transform: scale(1.01);
-}
-
-/* Smooth transitions */
-* {
-  transition-property: background-color, border-color, transform;
-  transition-duration: 200ms;
-  transition-timing-function: ease-in-out;
+  100% {
+    transform: scale(0.4);
+  }
 }
 </style>

@@ -1,146 +1,160 @@
 <template>
-  <div class="h-[calc(100vh-12rem)] flex gap-6">
-    <!-- Conversations List -->
-    <div class="w-80 bg-white rounded-2xl shadow-sm border border-gray-200 flex flex-col">
-      <!-- Search -->
-      <div class="p-4 border-b border-gray-200">
-        <div class="relative">
-          <Search class="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
-          <input
-            v-model="searchQuery"
-            type="text"
-            placeholder="Search conversations..."
-            class="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-xl focus:ring-2 focus:ring-teal-500 focus:border-transparent"
-          />
-        </div>
-      </div>
-
-      <!-- Conversations -->
-      <div class="flex-1 overflow-y-auto">
-        <div
-          v-for="conversation in filteredConversations"
-          :key="conversation.id"
-          @click="selectConversation(conversation.id)"
-          :class="[
-            'p-4 border-b border-gray-200 cursor-pointer transition-colors',
-            selectedConversation === conversation.id ? 'bg-teal-50' : 'hover:bg-gray-50'
-          ]"
-        >
-          <div class="flex items-start gap-3">
-            <div class="w-12 h-12 rounded-full bg-teal-600 text-white flex items-center justify-center text-sm font-bold flex-shrink-0">
-              {{ conversation.avatar }}
-            </div>
-            <div class="flex-1 min-w-0">
-              <div class="flex items-start justify-between">
-                <h4 class="font-semibold text-gray-900 truncate">{{ conversation.name }}</h4>
-                <span class="text-xs text-gray-500 ml-2">{{ conversation.time }}</span>
-              </div>
-              <p class="text-sm text-gray-600 truncate mt-1">{{ conversation.lastMessage }}</p>
-              <span v-if="conversation.unread" class="inline-block mt-1 px-2 py-0.5 bg-teal-600 text-white text-xs rounded-full">
-                {{ conversation.unread }} new
-              </span>
-            </div>
-          </div>
-        </div>
+  <div class="h-screen bg-white flex flex-col">
+    <div class="max-w-7xl mx-auto px-6 py-8 w-full">
+      <!-- Header -->
+      <div class="mb-6">
+        <h1 class="text-5xl font-light text-gray-900 mb-2 tracking-tight">Messages</h1>
+        <p class="text-lg text-gray-500">Secure communication with your therapist</p>
       </div>
     </div>
-
-    <!-- Chat Area -->
-    <div class="flex-1 bg-white rounded-2xl shadow-sm border border-gray-200 flex flex-col">
-      <div v-if="selectedConversation">
-        <!-- Chat Header -->
-        <div class="p-4 border-b border-gray-200 flex items-center justify-between">
-          <div class="flex items-center gap-3">
-            <div class="w-10 h-10 rounded-full bg-teal-600 text-white flex items-center justify-center text-sm font-bold">
-              {{ getCurrentConversation?.avatar }}
-            </div>
-            <div>
-              <h3 class="font-semibold text-gray-900">{{ getCurrentConversation?.name }}</h3>
-              <p class="text-sm text-gray-600">{{ getCurrentConversation?.specialty }}</p>
+    <!-- Chat Interface - Fixed Height -->
+    <div class="flex-1 max-w-7xl mx-auto px-6 pb-6 w-full overflow-hidden">
+      <div class="flex gap-0 border border-gray-200 h-full">
+        <!-- Conversations List -->
+        <div class="w-80 border-r border-gray-200 flex flex-col h-full">
+          <!-- Search -->
+          <div class="p-6 border-b border-gray-200 flex-shrink-0">
+            <div class="relative">
+              <Search class="absolute left-0 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
+              <input
+                v-model="searchQuery"
+                type="text"
+                placeholder="Search"
+                class="w-full pl-8 pr-4 py-2 border-b-2 border-gray-200 focus:outline-none focus:border-emerald-600 bg-transparent transition-colors"
+              />
             </div>
           </div>
-          <div class="flex items-center gap-2">
-            <button class="p-2 text-gray-400 hover:text-teal-600 transition-colors">
-              <Phone class="w-5 h-5" />
-            </button>
-            <button class="p-2 text-gray-400 hover:text-teal-600 transition-colors">
-              <Video class="w-5 h-5" />
-            </button>
-            <button class="p-2 text-gray-400 hover:text-teal-600 transition-colors">
-              <MoreVertical class="w-5 h-5" />
-            </button>
-          </div>
-        </div>
-
-        <!-- Messages -->
-        <div ref="messagesContainer" class="flex-1 overflow-y-auto p-4 space-y-4">
-          <div
-            v-for="message in messages"
-            :key="message.id"
-            :class="[
-              'flex gap-3',
-              message.sender === 'me' ? 'flex-row-reverse' : 'flex-row'
-            ]"
-          >
+          <!-- Conversations - Scrollable -->
+          <div class="flex-1 overflow-y-auto">
             <div
-              v-if="message.sender !== 'me'"
-              class="w-8 h-8 rounded-full bg-teal-600 text-white flex items-center justify-center text-xs font-bold flex-shrink-0"
-            >
-              {{ getCurrentConversation?.avatar }}
-            </div>
-            <div :class="['max-w-md', message.sender === 'me' ? 'items-end' : 'items-start']">
-              <div
-                :class="[
-                  'rounded-2xl px-4 py-2',
-                  message.sender === 'me'
-                    ? 'bg-teal-600 text-white'
-                    : 'bg-gray-100 text-gray-900'
-                ]"
-              >
-                <p class="text-sm">{{ message.text }}</p>
-              </div>
-              <span class="text-xs text-gray-500 mt-1 block">{{ message.time }}</span>
-            </div>
-          </div>
-        </div>
-
-        <!-- Message Input -->
-        <div class="p-4 border-t border-gray-200">
-          <div class="flex items-end gap-2">
-            <button class="p-2 text-gray-400 hover:text-teal-600 transition-colors">
-              <Paperclip class="w-5 h-5" />
-            </button>
-            <div class="flex-1 relative">
-              <textarea
-                v-model="newMessage"
-                @keydown.enter.prevent="sendMessage"
-                placeholder="Type your message..."
-                rows="1"
-                class="w-full px-4 py-2 border border-gray-300 rounded-xl focus:ring-2 focus:ring-teal-500 focus:border-transparent resize-none"
-              ></textarea>
-            </div>
-            <button
-              @click="sendMessage"
-              :disabled="!newMessage.trim()"
+              v-for="conversation in filteredConversations"
+              :key="conversation.id"
+              @click="selectConversation(conversation.id)"
               :class="[
-                'p-2 rounded-xl transition-colors',
-                newMessage.trim()
-                  ? 'bg-teal-600 text-white hover:bg-teal-700'
-                  : 'bg-gray-200 text-gray-400 cursor-not-allowed'
+                'p-6 border-b border-gray-100 cursor-pointer transition-all',
+                selectedConversation === conversation.id 
+                  ? 'bg-emerald-50 border-l-4 border-l-emerald-600' 
+                  : 'hover:bg-gray-50 border-l-4 border-l-transparent'
               ]"
             >
-              <Send class="w-5 h-5" />
-            </button>
+              <div class="flex items-start gap-4">
+                <img 
+                  :src="`https://api.dicebear.com/7.x/avataaars/svg?seed=${conversation.name}`"
+                  :alt="conversation.name"
+                  class="w-12 h-12 rounded-full flex-shrink-0"
+                />
+                <div class="flex-1 min-w-0">
+                  <div class="flex items-baseline justify-between mb-1">
+                    <h4 class="font-medium text-gray-900 truncate">{{ conversation.name }}</h4>
+                    <span class="text-xs text-gray-400 ml-2">{{ conversation.time }}</span>
+                  </div>
+                  <p class="text-sm text-gray-500 mb-1">{{ conversation.specialty }}</p>
+                  <p class="text-sm text-gray-600 truncate">{{ conversation.lastMessage }}</p>
+                  <div v-if="conversation.unread" class="mt-2 inline-block w-2 h-2 bg-emerald-600 rounded-full"></div>
+                </div>
+              </div>
+            </div>
           </div>
         </div>
-      </div>
-
-      <!-- Empty State -->
-      <div v-else class="flex-1 flex items-center justify-center">
-        <div class="text-center">
-          <MessageCircle class="w-16 h-16 text-gray-300 mx-auto mb-4" />
-          <h3 class="text-lg font-semibold text-gray-900 mb-2">No conversation selected</h3>
-          <p class="text-gray-600">Choose a conversation to start messaging</p>
+        <!-- Chat Area -->
+        <div class="flex-1 flex flex-col h-full">
+          <div v-if="selectedConversation" class="flex flex-col h-full">
+            <!-- Chat Header -->
+            <div class="p-6 border-b border-gray-200 flex-shrink-0">
+              <div class="flex items-center justify-between">
+                <div class="flex items-center gap-4">
+                  <img 
+                    :src="`https://api.dicebear.com/7.x/avataaars/svg?seed=${getCurrentConversation?.name}`"
+                    :alt="getCurrentConversation?.name"
+                    class="w-12 h-12 rounded-full"
+                  />
+                  <div>
+                    <h3 class="text-lg font-medium text-gray-900">{{ getCurrentConversation?.name }}</h3>
+                    <p class="text-sm text-gray-500">{{ getCurrentConversation?.specialty }}</p>
+                  </div>
+                </div>
+                <div class="flex items-center gap-4">
+                  <button class="text-gray-400 hover:text-gray-900 transition-colors">
+                    <Phone class="w-5 h-5" />
+                  </button>
+                  <button class="text-gray-400 hover:text-gray-900 transition-colors">
+                    <Video class="w-5 h-5" />
+                  </button>
+                  <button class="text-gray-400 hover:text-gray-900 transition-colors">
+                    <MoreVertical class="w-5 h-5" />
+                  </button>
+                </div>
+              </div>
+            </div>
+            <!-- Messages - Scrollable -->
+            <div ref="messagesContainer" class="flex-1 overflow-y-auto p-6 space-y-6 bg-gray-50">
+              <div
+                v-for="message in messages"
+                :key="message.id"
+                :class="[
+                  'flex gap-4',
+                  message.sender === 'me' ? 'flex-row-reverse' : 'flex-row'
+                ]"
+              >
+                <img
+                  v-if="message.sender !== 'me'"
+                  :src="`https://api.dicebear.com/7.x/avataaars/svg?seed=${getCurrentConversation?.name}`"
+                  :alt="getCurrentConversation?.name"
+                  class="w-10 h-10 rounded-full flex-shrink-0"
+                />
+                <div :class="['max-w-lg', message.sender === 'me' ? 'items-end' : 'items-start']">
+                  <div
+                    :class="[
+                      'px-4 py-3',
+                      message.sender === 'me'
+                        ? 'bg-emerald-600 text-white'
+                        : 'bg-white text-gray-900 border border-gray-200'
+                    ]"
+                  >
+                    <p class="text-sm leading-relaxed">{{ message.text }}</p>
+                  </div>
+                  <span class="text-xs text-gray-400 mt-2 block">{{ message.time }}</span>
+                </div>
+              </div>
+            </div>
+            <!-- Message Input -->
+            <div class="p-6 border-t border-gray-200 bg-white flex-shrink-0">
+              <div class="flex items-end gap-3">
+                <button class="p-2 text-gray-400 hover:text-gray-900 transition-colors">
+                  <Paperclip class="w-5 h-5" />
+                </button>
+                <div class="flex-1">
+                  <textarea
+                    v-model="newMessage"
+                    @keydown.enter.prevent="sendMessage"
+                    placeholder="Type a message"
+                    rows="1"
+                    class="w-full px-4 py-3 border-b-2 border-gray-200 focus:outline-none focus:border-emerald-600 resize-none bg-transparent transition-colors"
+                  ></textarea>
+                </div>
+                <button
+                  @click="sendMessage"
+                  :disabled="!newMessage.trim()"
+                  :class="[
+                    'p-3 transition-colors',
+                    newMessage.trim()
+                      ? 'bg-emerald-600 text-white hover:bg-emerald-700'
+                      : 'bg-gray-100 text-gray-300 cursor-not-allowed'
+                  ]"
+                >
+                  <Send class="w-5 h-5" />
+                </button>
+              </div>
+            </div>
+          </div>
+          <!-- Empty State -->
+          <div v-else class="flex-1 flex items-center justify-center bg-gray-50">
+            <div class="text-center">
+              <MessageCircle class="w-16 h-16 text-gray-300 mx-auto mb-4" />
+              <h3 class="text-xl font-light text-gray-900 mb-2">Select a conversation</h3>
+              <p class="text-gray-500">Choose a therapist to start messaging</p>
+            </div>
+          </div>
         </div>
       </div>
     </div>
@@ -161,7 +175,6 @@ const conversations = ref([
     id: 1,
     name: 'Dr. Sarah Chen',
     specialty: 'Clinical Psychologist',
-    avatar: 'SC',
     lastMessage: 'Looking forward to our session tomorrow!',
     time: '10:30 AM',
     unread: 2
@@ -170,7 +183,6 @@ const conversations = ref([
     id: 2,
     name: 'Dr. Michael Roberts',
     specialty: 'Behavioral Therapist',
-    avatar: 'MR',
     lastMessage: 'Great progress on your anxiety management',
     time: 'Yesterday',
     unread: 0
@@ -179,10 +191,25 @@ const conversations = ref([
     id: 3,
     name: 'Dr. Emily Davis',
     specialty: 'Marriage Counselor',
-    avatar: 'ED',
     lastMessage: 'Remember to practice the communication exercises',
     time: '2 days ago',
     unread: 1
+  },
+  {
+    id: 4,
+    name: 'Dr. James Wilson',
+    specialty: 'Trauma Specialist',
+    lastMessage: 'How are you feeling after our last session?',
+    time: '3 days ago',
+    unread: 0
+  },
+  {
+    id: 5,
+    name: 'Dr. Lisa Anderson',
+    specialty: 'Family Therapist',
+    lastMessage: 'The family meeting went really well',
+    time: 'Last week',
+    unread: 0
   }
 ])
 
@@ -232,23 +259,22 @@ const getCurrentConversation = computed(() => {
 
 const selectConversation = (id: number) => {
   selectedConversation.value = id
-  // Mark as read
   const conv = conversations.value.find(c => c.id === id)
   if (conv) conv.unread = 0
 }
 
 const sendMessage = () => {
   if (!newMessage.value.trim()) return
-
+  
   messages.value.push({
     id: messages.value.length + 1,
     sender: 'me',
     text: newMessage.value,
     time: new Date().toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' })
   })
-
+  
   newMessage.value = ''
-
+  
   nextTick(() => {
     if (messagesContainer.value) {
       messagesContainer.value.scrollTop = messagesContainer.value.scrollHeight
@@ -264,3 +290,24 @@ watch(selectedConversation, () => {
   })
 })
 </script>
+
+<style scoped>
+/* Custom scrollbar for messages */
+.overflow-y-auto::-webkit-scrollbar {
+  width: 6px;
+}
+.overflow-y-auto::-webkit-scrollbar-track {
+  background: transparent;
+}
+.overflow-y-auto::-webkit-scrollbar-thumb {
+  background: #d1d5db;
+  border-radius: 3px;
+}
+.overflow-y-auto::-webkit-scrollbar-thumb:hover {
+  background: #9ca3af;
+}
+/* Smooth transitions */
+button, input, textarea {
+  transition: all 0.2s ease;
+}
+</style>

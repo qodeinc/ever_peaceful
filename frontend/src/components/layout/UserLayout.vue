@@ -15,8 +15,7 @@
             <Brain class="w-6 h-6 text-white" />
           </div>
           <div class="transition-opacity duration-200">
-            <h1 class="text-lg font-bold text-gray-900">MindWell Dashboard</h1>
-            <p class="text-xs text-gray-500">Your Wellness Journey</p>
+            <h1 class="text-lg font-bold text-gray-900">Ever Peaceful</h1>
           </div>
         </div>
         <!-- Collapse Button -->
@@ -31,7 +30,6 @@
           <ChevronRight v-else class="w-5 h-5" />
         </button>
       </div>
-
       <!-- Navigation - Scrollable -->
       <div class="flex flex-col h-[calc(100vh-5rem)]">
         <nav class="flex-1 mt-6 px-2 overflow-y-auto">
@@ -53,7 +51,6 @@
                   {{ item.badge }}
                 </span>
               </button>
-
               <!-- Dropdown nav items -->
               <div v-else>
                 <button
@@ -86,7 +83,6 @@
                     >
                       {{ child.title }}
                     </button>
-
                     <!-- Nested dropdown children (Level 3) -->
                     <div v-else>
                       <button
@@ -124,7 +120,6 @@
             </template>
           </div>
         </nav>
-
         <!-- Logout Button - Fixed at bottom -->
         <div class="px-2 pb-4 border-t border-gray-200 pt-2">
           <button
@@ -146,7 +141,6 @@
         </div>
       </div>
     </div>
-
     <!-- Main Content Area -->
     <div :class="['transition-all duration-300', sidebarCollapsed ? 'ml-16' : 'ml-64']">
       <!-- Top Navigation Bar -->
@@ -204,16 +198,17 @@
                   </div>
                 </div>
               </div>
-
-              <!-- Profile Dropdown with Avatar Initials -->
+              <!-- Profile Dropdown with Avatar -->
               <div class="relative">
                 <button 
                   @click="toggleProfileDropdown"
                   class="flex items-center space-x-3 focus:outline-none"
                 >
-                  <div class="w-8 h-8 rounded-full border-2 border-teal-200 bg-teal-600 text-white flex items-center justify-center text-sm font-medium">
-                    {{ userInitials }}
-                  </div>
+                  <img 
+                    :src="`https://api.dicebear.com/7.x/avataaars/svg?seed=${userProfile.name}`"
+                    :alt="userProfile.name"
+                    class="w-8 h-8 rounded-full border-2 border-teal-200"
+                  />
                 </button>
                 
                 <!-- Profile Dropdown -->
@@ -249,7 +244,6 @@
           </div>
         </div>
       </header>
-
       <!-- Content Area with Transition -->
       <main class="p-6">
         <transition
@@ -262,7 +256,6 @@
         </transition>
       </main>
     </div>
-
     <!-- Mobile Menu Overlay -->
     <div 
       v-if="isMobileMenuOpen"
@@ -299,8 +292,20 @@ const componentMap = {
   progress: defineAsyncComponent(() => import('../../views/user/Progress.vue')),
   profile: defineAsyncComponent(() => import('../../views/user/Profile.vue')),
   account: defineAsyncComponent(() => import('../../views/user/Account.vue')),
-  'session-details': defineAsyncComponent(() => import('../../views/user/SessionDetails.vue'))
+  'session-details': defineAsyncComponent(() => import('../../views/user/SessionDetails.vue')),
+
+  // 🧠 Personality & Cognitive Assessments
+  'bfi-2-s': defineAsyncComponent(() => import('../../views/user/assessments/personality/BFI2S.vue')),
+  'eysenck': defineAsyncComponent(() => import('../../views/user/assessments/personality/Eysenck.vue')),
+  'temperament': defineAsyncComponent(() => import('../../views/user/assessments/personality/Temperament.vue')),
+  'abstract-reasoning': defineAsyncComponent(() => import('../../views/user/assessments/personality/AbstractReasoning.vue')),
+  'ravens': defineAsyncComponent(() => import('../../views/user/assessments/personality/Ravens.vue')),
+  'perceived-stress': defineAsyncComponent(() => import('../../views/user/assessments/personality/PerceivedStress.vue')),
+  'rosenberg': defineAsyncComponent(() => import('../../views/user/assessments/personality/Rosenberg.vue')),
+  'riasec': defineAsyncComponent(() => import('../../views/user/assessments/personality/RIASEC.vue')),
+  'self-compassion': defineAsyncComponent(() => import('../../views/user/assessments/personality/SelfCompassion.vue'))
 }
+
 
 const router = useRouter()
 
@@ -321,14 +326,6 @@ const activeNestedDropdown = ref<string | null>(null)
 const userProfile = ref({
   name: 'Sarah Johnson',
   email: 'sarah.johnson@mindwell.com'
-})
-
-// Compute initials
-const userInitials = computed(() => {
-  const names = userProfile.value.name.trim().split(' ')
-  return names.length > 1
-    ? `${names[0][0]}${names[names.length - 1][0]}`
-    : names[0][0] || 'SJ'
 })
 
 // Notification list
@@ -370,6 +367,22 @@ const navItems = ref([
           { name: 'cage-aid', title: 'CAGE-AID' },
           { name: 'tics', title: 'Drug Use: TICS' }
         ]
+      },
+      { 
+        name: 'personality-cognitive', 
+        title: 'Personality & Cognitive Tests',
+        hasDropdown: true,
+        children: [
+          { name: 'bfi-2-s', title: 'Big Five Inventory - 2 Short Form (BFI-2-S)' },
+          { name: 'eysenck', title: 'Eysenck’s Personality Inventory' },
+          { name: 'temperament', title: 'Personality Temperament Test' },
+          { name: 'abstract-reasoning', title: 'Abstract Reasoning Test' },
+          { name: 'ravens', title: 'Raven’s Progressive Matrices with Manual' },
+          { name: 'perceived-stress', title: 'Perceived Stress Scale' },
+          { name: 'rosenberg', title: 'Rosenberg Self-Esteem Scale' },
+          { name: 'riasec', title: 'RIASEC Test' },
+          { name: 'self-compassion', title: 'Neff’s Self-Compassion Scale' }
+        ]
       }
     ]
   },
@@ -380,6 +393,7 @@ const navItems = ref([
   { name: 'account', title: 'Account', icon: Settings },
   { name: 'session-details', title: 'Session Details', icon: FileText }
 ])
+
 
 // Section configuration
 const sectionTitles: Record<string, string> = {
