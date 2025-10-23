@@ -62,39 +62,41 @@
             <div 
               v-for="therapist in paginatedTherapists" 
               :key="therapist.id"
-              class="group bg-white border border-gray-200 hover:border-emerald-500 transition-all duration-300 cursor-pointer"
+              class="group bg-white border border-gray-200 hover:border-emerald-500 transition-all duration-300 cursor-pointer flex flex-col"
               @click="bookSession(therapist.id)"
             >
               <!-- Content -->
-              <div class="p-6 text-center">
+              <div class="p-6 text-center flex-1 flex flex-col">
                 <!-- Avatar -->
                 <div class="mb-4">
                   <img :src="getAvatar(therapist.id)" class="w-24 h-24 rounded-full object-cover mx-auto border-4 border-gray-100 group-hover:border-emerald-100 transition-all" alt="" />
                 </div>
                 
-                <div class="mb-3">
-                  <h3 class="text-xl font-light text-gray-900 mb-1">{{ therapist.name }}</h3>
-                  <p class="text-sm text-gray-500">{{ therapist.experience }} years experience</p>
+                <div class="flex-1">
+                  <div class="mb-3">
+                    <h3 class="text-xl font-light text-gray-900 mb-1">{{ therapist.name }}</h3>
+                    <p class="text-sm text-gray-500">{{ therapist.experience }} years experience</p>
+                  </div>
+                  
+                  <p class="text-sm text-gray-600 mb-4 line-clamp-2 leading-relaxed">{{ therapist.bio }}</p>
+                  
+                  <!-- Specializations -->
+                  <div class="flex flex-wrap gap-2 mb-4 justify-center">
+                    <span 
+                      v-for="spec in therapist.specializations.slice(0, 2)" 
+                      :key="spec"
+                      class="text-xs text-emerald-700 bg-emerald-50 px-2 py-1"
+                    >
+                      {{ spec }}
+                    </span>
+                    <span v-if="therapist.specializations.length > 2" class="text-xs text-gray-500 px-2 py-1">
+                      +{{ therapist.specializations.length - 2 }}
+                    </span>
+                  </div>
                 </div>
                 
-                <p class="text-sm text-gray-600 mb-4 line-clamp-2 leading-relaxed">{{ therapist.bio }}</p>
-                
-                <!-- Specializations -->
-                <div class="flex flex-wrap gap-2 mb-4 justify-center">
-                  <span 
-                    v-for="spec in therapist.specializations.slice(0, 2)" 
-                    :key="spec"
-                    class="text-xs text-emerald-700 bg-emerald-50 px-2 py-1"
-                  >
-                    {{ spec }}
-                  </span>
-                  <span v-if="therapist.specializations.length > 2" class="text-xs text-gray-500 px-2 py-1">
-                    +{{ therapist.specializations.length - 2 }}
-                  </span>
-                </div>
-                
-                <!-- Rate & CTA -->
-                <div class="flex items-center justify-between pt-4 border-t border-gray-100">
+                <!-- Rate & CTA - Always at bottom -->
+                <div class="flex items-center justify-between pt-4 border-t border-gray-100 mt-auto">
                   <span class="text-lg font-light text-gray-900">KSh {{ therapist.rate.toLocaleString() }}</span>
                   <ChevronRight class="w-5 h-5 text-gray-400 group-hover:text-emerald-600 group-hover:translate-x-1 transition-all" />
                 </div>
@@ -218,6 +220,7 @@
               min="2025-10-22T00:00"
             />
           </div>
+
           <div>
             <label class="block text-sm font-medium text-gray-900 mb-3">Session Type</label>
             <select v-model="bookingType" class="w-full px-4 py-3 border border-gray-200 focus:outline-none focus:border-emerald-600 focus:ring-1 focus:ring-emerald-600 transition-colors">
@@ -226,6 +229,7 @@
               <option value="family">Family Session — KSh 7,000</option>
             </select>
           </div>
+
           <button 
             @click="confirmBooking"
             class="w-full bg-emerald-600 text-white py-4 hover:bg-emerald-700 transition-colors font-medium"
@@ -418,6 +422,7 @@ const bookSession = (therapistId) => {
 
 const confirmBooking = async () => {
   if (!bookingDateTime.value) return
+  
   try {
     console.log('Booking confirmed:', {
       therapist: selectedTherapist.value.name,
