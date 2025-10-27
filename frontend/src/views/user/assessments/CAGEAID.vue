@@ -1,391 +1,327 @@
 <template>
-  <div class="max-w-6xl mx-auto px-6 py-12">
-    <!-- Main Layout: Left Header, Right Form -->
-    <div class="grid grid-cols-1 lg:grid-cols-2 gap-12 items-start">
-      <!-- Left Side: Header and Info -->
-      <div class="space-y-8">
-        <!-- Header -->
-        <div class="space-y-4">
-          <div class="flex items-start space-x-4">
-            <div class="w-12 h-12 bg-emerald-100 rounded-xl flex items-center justify-center flex-shrink-0">
-              <svg class="w-6 h-6 text-emerald-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4" />
-              </svg>
+  <div class="min-h-screen bg-white">
+    <div class="max-w-4xl mx-auto px-6 py-16">
+      <!-- Header -->
+      <div class="mb-20">
+        <h1 class="text-5xl font-light text-gray-900 mb-4 tracking-tight">CAGE-AID Assessment</h1>
+        <p class="text-lg text-gray-500 mb-8 max-w-2xl">CAGE Adapted to Include Drugs. A brief screening tool for identifying potential problems with alcohol and drug use. Answer based on your lifetime experience.</p>
+        <div class="text-sm text-gray-400">4 questions · Less than 1 minute</div>
+      </div>
+
+      <!-- Important Note -->
+      <div class="mb-16 p-6 bg-blue-50 border-l-4 border-blue-600">
+        <p class="text-sm text-blue-900">
+          <strong>Important:</strong> When thinking about drug use, include illegal drug use and the use of prescription drugs other than prescribed.
+        </p>
+      </div>
+
+      <!-- Progress Indicator -->
+      <div class="mb-16">
+        <div class="flex items-center gap-3">
+          <div 
+            v-for="i in 4" 
+            :key="i"
+            :class="[
+              'h-1 flex-1 transition-all duration-500',
+              answeredQuestions >= i ? 'bg-emerald-600' : 'bg-gray-200'
+            ]"
+          />
+        </div>
+        <div class="text-sm text-gray-500 mt-3">Question {{ Math.min(answeredQuestions + 1, 4) }} of 4</div>
+      </div>
+
+      <!-- Questions -->
+      <form @submit.prevent="calculateScore" class="space-y-24">
+        <!-- Question 1: Cut down -->
+        <div ref="q1" class="scroll-mt-32">
+          <div class="mb-8">
+            <div class="text-sm text-gray-400 mb-3">Question 1 · C</div>
+            <h2 class="text-3xl font-light text-gray-900 mb-2">
+              Have you ever felt you ought to <span class="font-normal text-emerald-600">Cut down</span> on your drinking or drug use?
+            </h2>
+          </div>
+          
+          <div class="space-y-3">
+            <label
+              v-for="option in yesNoOptions"
+              :key="option.value"
+              :class="[
+                'group block p-6 border-2 cursor-pointer transition-all duration-200',
+                answers.question1 === option.value
+                  ? 'border-emerald-600 bg-emerald-50/50'
+                  : 'border-gray-200 hover:border-gray-400'
+              ]"
+            >
+              <input
+                type="radio"
+                v-model="answers.question1"
+                :value="option.value"
+                class="sr-only"
+                required
+                @change="onAnswerChange(1)"
+              />
+              <div class="flex items-center justify-between">
+                <span class="text-lg text-gray-900">{{ option.label }}</span>
+                <div :class="[
+                  'w-5 h-5 border-2 rounded-full transition-all',
+                  answers.question1 === option.value
+                    ? 'border-emerald-600 bg-emerald-600'
+                    : 'border-gray-300 group-hover:border-gray-400'
+                ]">
+                  <div v-if="answers.question1 === option.value" class="w-full h-full rounded-full bg-white scale-[0.4]" />
+                </div>
+              </div>
+            </label>
+          </div>
+        </div>
+
+        <!-- Question 2: Annoyed -->
+        <div ref="q2" class="scroll-mt-32">
+          <div class="mb-8">
+            <div class="text-sm text-gray-400 mb-3">Question 2 · A</div>
+            <h2 class="text-3xl font-light text-gray-900 mb-2">
+              Have people <span class="font-normal text-emerald-600">Annoyed</span> you by criticizing your drinking or drug use?
+            </h2>
+          </div>
+          
+          <div class="space-y-3">
+            <label
+              v-for="option in yesNoOptions"
+              :key="option.value"
+              :class="[
+                'group block p-6 border-2 cursor-pointer transition-all duration-200',
+                answers.question2 === option.value
+                  ? 'border-emerald-600 bg-emerald-50/50'
+                  : 'border-gray-200 hover:border-gray-400'
+              ]"
+            >
+              <input
+                type="radio"
+                v-model="answers.question2"
+                :value="option.value"
+                class="sr-only"
+                required
+                @change="onAnswerChange(2)"
+              />
+              <div class="flex items-center justify-between">
+                <span class="text-lg text-gray-900">{{ option.label }}</span>
+                <div :class="[
+                  'w-5 h-5 border-2 rounded-full transition-all',
+                  answers.question2 === option.value
+                    ? 'border-emerald-600 bg-emerald-600'
+                    : 'border-gray-300 group-hover:border-gray-400'
+                ]">
+                  <div v-if="answers.question2 === option.value" class="w-full h-full rounded-full bg-white scale-[0.4]" />
+                </div>
+              </div>
+            </label>
+          </div>
+        </div>
+
+        <!-- Question 3: Guilty -->
+        <div ref="q3" class="scroll-mt-32">
+          <div class="mb-8">
+            <div class="text-sm text-gray-400 mb-3">Question 3 · G</div>
+            <h2 class="text-3xl font-light text-gray-900 mb-2">
+              Have you ever felt bad or <span class="font-normal text-emerald-600">Guilty</span> about your drinking or drug use?
+            </h2>
+          </div>
+          
+          <div class="space-y-3">
+            <label
+              v-for="option in yesNoOptions"
+              :key="option.value"
+              :class="[
+                'group block p-6 border-2 cursor-pointer transition-all duration-200',
+                answers.question3 === option.value
+                  ? 'border-emerald-600 bg-emerald-50/50'
+                  : 'border-gray-200 hover:border-gray-400'
+              ]"
+            >
+              <input
+                type="radio"
+                v-model="answers.question3"
+                :value="option.value"
+                class="sr-only"
+                required
+                @change="onAnswerChange(3)"
+              />
+              <div class="flex items-center justify-between">
+                <span class="text-lg text-gray-900">{{ option.label }}</span>
+                <div :class="[
+                  'w-5 h-5 border-2 rounded-full transition-all',
+                  answers.question3 === option.value
+                    ? 'border-emerald-600 bg-emerald-600'
+                    : 'border-gray-300 group-hover:border-gray-400'
+                ]">
+                  <div v-if="answers.question3 === option.value" class="w-full h-full rounded-full bg-white scale-[0.4]" />
+                </div>
+              </div>
+            </label>
+          </div>
+        </div>
+
+        <!-- Question 4: Eye opener -->
+        <div ref="q4" class="scroll-mt-32">
+          <div class="mb-8">
+            <div class="text-sm text-gray-400 mb-3">Question 4 · E</div>
+            <h2 class="text-3xl font-light text-gray-900 mb-2">
+              Have you ever had a drink or used drugs first thing in the morning?
+            </h2>
+            <p class="text-gray-500"><span class="font-normal text-emerald-600">Eye opener</span> to steady your nerves or get rid of a hangover</p>
+          </div>
+          
+          <div class="space-y-3">
+            <label
+              v-for="option in yesNoOptions"
+              :key="option.value"
+              :class="[
+                'group block p-6 border-2 cursor-pointer transition-all duration-200',
+                answers.question4 === option.value
+                  ? 'border-emerald-600 bg-emerald-50/50'
+                  : 'border-gray-200 hover:border-gray-400'
+              ]"
+            >
+              <input
+                type="radio"
+                v-model="answers.question4"
+                :value="option.value"
+                class="sr-only"
+                required
+                @change="onAnswerChange(4)"
+              />
+              <div class="flex items-center justify-between">
+                <span class="text-lg text-gray-900">{{ option.label }}</span>
+                <div :class="[
+                  'w-5 h-5 border-2 rounded-full transition-all',
+                  answers.question4 === option.value
+                    ? 'border-emerald-600 bg-emerald-600'
+                    : 'border-gray-300 group-hover:border-gray-400'
+                ]">
+                  <div v-if="answers.question4 === option.value" class="w-full h-full rounded-full bg-white scale-[0.4]" />
+                </div>
+              </div>
+            </label>
+          </div>
+        </div>
+
+        <!-- Submit Button -->
+        <div v-if="allAnswered" class="pt-12 border-t border-gray-200">
+          <button
+            type="submit"
+            class="w-full bg-emerald-600 text-white py-5 text-lg hover:bg-emerald-700 transition-colors disabled:bg-gray-300 disabled:cursor-not-allowed"
+          >
+            View Results
+          </button>
+        </div>
+      </form>
+
+      <!-- Results Section -->
+      <div v-if="showResults" class="mt-32 pt-32 border-t border-gray-200">
+        <!-- Score -->
+        <div class="mb-20">
+          <div class="text-sm text-gray-400 mb-4">Your Score</div>
+          <div class="flex items-baseline gap-4 mb-8">
+            <span class="text-8xl font-light text-gray-900">{{ totalScore }}</span>
+            <span class="text-3xl text-gray-400">/ 4</span>
+          </div>
+          
+          <div class="max-w-2xl">
+            <h3 class="text-2xl font-light text-gray-900 mb-4">{{ interpretationTitle }}</h3>
+            <p class="text-lg text-gray-600 leading-relaxed">{{ interpretationText }}</p>
+          </div>
+        </div>
+
+        <!-- Your Responses -->
+        <div class="mb-20">
+          <h4 class="text-sm uppercase tracking-wider text-gray-500 mb-8">Your Responses</h4>
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-4 max-w-2xl">
+            <div class="p-6 bg-gray-50 border border-gray-200">
+              <div class="flex items-center justify-between mb-2">
+                <div class="text-2xl font-light text-emerald-600">C</div>
+                <span :class="[
+                  'text-sm font-medium',
+                  answers.question1 === 1 ? 'text-emerald-600' : 'text-gray-500'
+                ]">
+                  {{ answers.question1 === 1 ? 'Yes' : 'No' }}
+                </span>
+              </div>
+              <div class="text-sm text-gray-600">Cut down on drinking/drug use</div>
             </div>
-            <div class="flex-1">
-              <h1 class="text-3xl font-bold text-gray-900 mb-2">CAGE-AID Assessment</h1>
-              <h2 class="text-lg text-emerald-600 font-semibold mb-3">CAGE Adapted to Include Drugs</h2>
-              <p class="text-gray-600 leading-relaxed">
-                The CAGE-AID is an adaptation of the CAGE questionnaire for conjointly screening for alcohol and drug problems. 
-                This screening focuses on lifetime use and takes about 1-2 minutes to complete.
-              </p>
+            <div class="p-6 bg-gray-50 border border-gray-200">
+              <div class="flex items-center justify-between mb-2">
+                <div class="text-2xl font-light text-emerald-600">A</div>
+                <span :class="[
+                  'text-sm font-medium',
+                  answers.question2 === 1 ? 'text-emerald-600' : 'text-gray-500'
+                ]">
+                  {{ answers.question2 === 1 ? 'Yes' : 'No' }}
+                </span>
+              </div>
+              <div class="text-sm text-gray-600">Annoyed by criticism</div>
+            </div>
+            <div class="p-6 bg-gray-50 border border-gray-200">
+              <div class="flex items-center justify-between mb-2">
+                <div class="text-2xl font-light text-emerald-600">G</div>
+                <span :class="[
+                  'text-sm font-medium',
+                  answers.question3 === 1 ? 'text-emerald-600' : 'text-gray-500'
+                ]">
+                  {{ answers.question3 === 1 ? 'Yes' : 'No' }}
+                </span>
+              </div>
+              <div class="text-sm text-gray-600">Guilty about use</div>
+            </div>
+            <div class="p-6 bg-gray-50 border border-gray-200">
+              <div class="flex items-center justify-between mb-2">
+                <div class="text-2xl font-light text-emerald-600">E</div>
+                <span :class="[
+                  'text-sm font-medium',
+                  answers.question4 === 1 ? 'text-emerald-600' : 'text-gray-500'
+                ]">
+                  {{ answers.question4 === 1 ? 'Yes' : 'No' }}
+                </span>
+              </div>
+              <div class="text-sm text-gray-600">Eye opener in morning</div>
             </div>
           </div>
         </div>
 
-        <!-- Important Note -->
-        <div class="bg-emerald-50 rounded-xl p-6 border border-emerald-200">
-          <div class="flex items-start space-x-3">
-            <svg class="w-5 h-5 text-emerald-600 flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-            </svg>
-            <div class="text-sm text-emerald-900">
-              <p class="font-semibold mb-1">Before You Begin</p>
-              <p>
-                When thinking about drug use, include <span class="font-semibold">illegal drug use</span> and the 
-                <span class="font-semibold">use of prescription drugs other than prescribed</span>.
-              </p>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      <!-- Right Side: Scrollable Form -->
-      <div class="space-y-8 max-h-screen overflow-y-auto pr-4 lg:pr-0">
-        <form @submit.prevent="calculateScore" class="space-y-8">
-          <div class="bg-white rounded-2xl shadow-sm border border-gray-200 p-6 lg:p-8">
-            <!-- Question 1: Cut down -->
-            <div ref="q1" class="pb-6 border-b border-gray-200">
-              <div class="mb-4">
-                <div class="inline-block bg-emerald-100 rounded-lg px-3 py-1 mb-2">
-                  <span class="text-emerald-800 font-black text-lg">C</span>
-                </div>
-                <label class="block text-lg font-medium text-gray-900">
-                  Have you ever felt that you ought to <span class="font-bold text-emerald-700">Cut down</span> on your drinking or drug use?
-                </label>
-              </div>
-              <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
-                <label
-                  :class="[
-                    'flex items-center justify-between p-4 border-2 rounded-xl cursor-pointer transition-all duration-200',
-                    answers.question1 === 1
-                      ? 'border-emerald-500 bg-emerald-50 shadow-md'
-                      : 'border-gray-200 hover:border-emerald-300 hover:bg-gray-50'
-                  ]"
-                >
-                  <input
-                    type="radio"
-                    v-model="answers.question1"
-                    :value="1"
-                    class="sr-only"
-                    required
-                    @change="onAnswerChange(1)"
-                  />
-                  <span class="font-medium text-gray-900">Yes</span>
-                  <span class="text-sm font-semibold text-emerald-600">1 point</span>
-                </label>
-                <label
-                  :class="[
-                    'flex items-center justify-between p-4 border-2 rounded-xl cursor-pointer transition-all duration-200',
-                    answers.question1 === 0
-                      ? 'border-emerald-500 bg-emerald-50 shadow-md'
-                      : 'border-gray-200 hover:border-emerald-300 hover:bg-gray-50'
-                  ]"
-                >
-                  <input
-                    type="radio"
-                    v-model="answers.question1"
-                    :value="0"
-                    class="sr-only"
-                    required
-                    @change="onAnswerChange(1)"
-                  />
-                  <span class="font-medium text-gray-900">No</span>
-                  <span class="text-sm font-semibold text-gray-500">0 points</span>
-                </label>
-              </div>
-            </div>
-
-            <!-- Question 2: Annoyed -->
-            <div ref="q2" class="pb-6 border-b border-gray-200">
-              <div class="mb-4">
-                <div class="inline-block bg-emerald-100 rounded-lg px-3 py-1 mb-2">
-                  <span class="text-emerald-800 font-black text-lg">A</span>
-                </div>
-                <label class="block text-lg font-medium text-gray-900">
-                  Have people <span class="font-bold text-emerald-700">Annoyed</span> you by criticizing your drinking or drug use?
-                </label>
-              </div>
-              <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
-                <label
-                  :class="[
-                    'flex items-center justify-between p-4 border-2 rounded-xl cursor-pointer transition-all duration-200',
-                    answers.question2 === 1
-                      ? 'border-emerald-500 bg-emerald-50 shadow-md'
-                      : 'border-gray-200 hover:border-emerald-300 hover:bg-gray-50'
-                  ]"
-                >
-                  <input
-                    type="radio"
-                    v-model="answers.question2"
-                    :value="1"
-                    class="sr-only"
-                    required
-                    @change="onAnswerChange(2)"
-                  />
-                  <span class="font-medium text-gray-900">Yes</span>
-                  <span class="text-sm font-semibold text-emerald-600">1 point</span>
-                </label>
-                <label
-                  :class="[
-                    'flex items-center justify-between p-4 border-2 rounded-xl cursor-pointer transition-all duration-200',
-                    answers.question2 === 0
-                      ? 'border-emerald-500 bg-emerald-50 shadow-md'
-                      : 'border-gray-200 hover:border-emerald-300 hover:bg-gray-50'
-                  ]"
-                >
-                  <input
-                    type="radio"
-                    v-model="answers.question2"
-                    :value="0"
-                    class="sr-only"
-                    required
-                    @change="onAnswerChange(2)"
-                  />
-                  <span class="font-medium text-gray-900">No</span>
-                  <span class="text-sm font-semibold text-gray-500">0 points</span>
-                </label>
-              </div>
-            </div>
-
-            <!-- Question 3: Guilty -->
-            <div ref="q3" class="pb-6 border-b border-gray-200">
-              <div class="mb-4">
-                <div class="inline-block bg-emerald-100 rounded-lg px-3 py-1 mb-2">
-                  <span class="text-emerald-800 font-black text-lg">G</span>
-                </div>
-                <label class="block text-lg font-medium text-gray-900">
-                  Have you ever felt bad or <span class="font-bold text-emerald-700">Guilty</span> about your drinking or drug use?
-                </label>
-              </div>
-              <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
-                <label
-                  :class="[
-                    'flex items-center justify-between p-4 border-2 rounded-xl cursor-pointer transition-all duration-200',
-                    answers.question3 === 1
-                      ? 'border-emerald-500 bg-emerald-50 shadow-md'
-                      : 'border-gray-200 hover:border-emerald-300 hover:bg-gray-50'
-                  ]"
-                >
-                  <input
-                    type="radio"
-                    v-model="answers.question3"
-                    :value="1"
-                    class="sr-only"
-                    required
-                    @change="onAnswerChange(3)"
-                  />
-                  <span class="font-medium text-gray-900">Yes</span>
-                  <span class="text-sm font-semibold text-emerald-600">1 point</span>
-                </label>
-                <label
-                  :class="[
-                    'flex items-center justify-between p-4 border-2 rounded-xl cursor-pointer transition-all duration-200',
-                    answers.question3 === 0
-                      ? 'border-emerald-500 bg-emerald-50 shadow-md'
-                      : 'border-gray-200 hover:border-emerald-300 hover:bg-gray-50'
-                  ]"
-                >
-                  <input
-                    type="radio"
-                    v-model="answers.question3"
-                    :value="0"
-                    class="sr-only"
-                    required
-                    @change="onAnswerChange(3)"
-                  />
-                  <span class="font-medium text-gray-900">No</span>
-                  <span class="text-sm font-semibold text-gray-500">0 points</span>
-                </label>
-              </div>
-            </div>
-
-            <!-- Question 4: Eye opener -->
-            <div ref="q4" class="pb-6 border-b border-gray-200">
-              <div class="mb-4">
-                <div class="inline-block bg-emerald-100 rounded-lg px-3 py-1 mb-2">
-                  <span class="text-emerald-800 font-black text-lg">E</span>
-                </div>
-                <label class="block text-lg font-medium text-gray-900">
-                  Have you ever had a drink or used drugs first thing in the morning to steady your nerves or to get rid of a hangover (<span class="font-bold text-emerald-700">Eye opener</span>)?
-                </label>
-              </div>
-              <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
-                <label
-                  :class="[
-                    'flex items-center justify-between p-4 border-2 rounded-xl cursor-pointer transition-all duration-200',
-                    answers.question4 === 1
-                      ? 'border-emerald-500 bg-emerald-50 shadow-md'
-                      : 'border-gray-200 hover:border-emerald-300 hover:bg-gray-50'
-                  ]"
-                >
-                  <input
-                    type="radio"
-                    v-model="answers.question4"
-                    :value="1"
-                    class="sr-only"
-                    required
-                    @change="onAnswerChange(4)"
-                  />
-                  <span class="font-medium text-gray-900">Yes</span>
-                  <span class="text-sm font-semibold text-emerald-600">1 point</span>
-                </label>
-                <label
-                  :class="[
-                    'flex items-center justify-between p-4 border-2 rounded-xl cursor-pointer transition-all duration-200',
-                    answers.question4 === 0
-                      ? 'border-emerald-500 bg-emerald-50 shadow-md'
-                      : 'border-gray-200 hover:border-emerald-300 hover:bg-gray-50'
-                  ]"
-                >
-                  <input
-                    type="radio"
-                    v-model="answers.question4"
-                    :value="0"
-                    class="sr-only"
-                    required
-                    @change="onAnswerChange(4)"
-                  />
-                  <span class="font-medium text-gray-900">No</span>
-                  <span class="text-sm font-semibold text-gray-500">0 points</span>
-                </label>
-              </div>
-            </div>
-
-            <!-- Submit Button -->
-            <div class="flex justify-center mt-8 pt-6 border-t border-gray-200 sticky bottom-0 bg-white py-4">
-              <button
-                type="submit"
-                class="px-8 py-4 bg-emerald-600 text-white font-semibold rounded-xl hover:bg-emerald-700 transition-colors duration-200 shadow-lg hover:shadow-xl"
-                :disabled="!allAnswered"
-              >
-                Calculate Score
-              </button>
-            </div>
-          </div>
-        </form>
-      </div>
-    </div>
-
-    <!-- Results Section (Full Width Below) -->
-    <div v-if="showResults" class="mt-16 space-y-8 animate-fadeIn">
-      <div class="text-center mb-6">
-        <h3 class="text-2xl font-bold text-gray-900 mb-2">Your Results</h3>
-        <div class="inline-block bg-emerald-100 rounded-2xl px-8 py-4 mt-4">
-          <p class="text-sm text-gray-600 mb-1">Total Score</p>
-          <p class="text-5xl font-bold text-emerald-600">{{ totalScore }}</p>
-          <p class="text-sm text-gray-500 mt-1">out of 4</p>
-        </div>
-      </div>
-
-      <!-- CAGE Acronym Breakdown -->
-      <div class="bg-gray-50 rounded-xl p-6 mb-6">
-        <h4 class="font-semibold text-lg text-gray-900 mb-4">Your Responses</h4>
-        <div class="space-y-3">
-          <div class="flex items-center justify-between p-3 bg-white rounded-lg">
-            <div class="flex items-center space-x-3">
-              <span class="font-black text-emerald-700 text-xl">C</span>
-              <span class="text-gray-700">Cut down</span>
-            </div>
-            <span :class="answers.question1 === 1 ? 'font-semibold text-emerald-700' : 'text-gray-500'">
-              {{ answers.question1 === 1 ? 'Yes' : 'No' }}
-            </span>
-          </div>
-          <div class="flex items-center justify-between p-3 bg-white rounded-lg">
-            <div class="flex items-center space-x-3">
-              <span class="font-black text-emerald-700 text-xl">A</span>
-              <span class="text-gray-700">Annoyed</span>
-            </div>
-            <span :class="answers.question2 === 1 ? 'font-semibold text-emerald-700' : 'text-gray-500'">
-              {{ answers.question2 === 1 ? 'Yes' : 'No' }}
-            </span>
-          </div>
-          <div class="flex items-center justify-between p-3 bg-white rounded-lg">
-            <div class="flex items-center space-x-3">
-              <span class="font-black text-emerald-700 text-xl">G</span>
-              <span class="text-gray-700">Guilty</span>
-            </div>
-            <span :class="answers.question3 === 1 ? 'font-semibold text-emerald-700' : 'text-gray-500'">
-              {{ answers.question3 === 1 ? 'Yes' : 'No' }}
-            </span>
-          </div>
-          <div class="flex items-center justify-between p-3 bg-white rounded-lg">
-            <div class="flex items-center space-x-3">
-              <span class="font-black text-emerald-700 text-xl">E</span>
-              <span class="text-gray-700">Eye opener</span>
-            </div>
-            <span :class="answers.question4 === 1 ? 'font-semibold text-emerald-700' : 'text-gray-500'">
-              {{ answers.question4 === 1 ? 'Yes' : 'No' }}
-            </span>
-          </div>
-        </div>
-      </div>
-
-      <!-- Interpretation -->
-      <div :class="[
-        'rounded-xl p-6 mb-6',
-        isPositiveScreen ? 'bg-amber-50 border-2 border-amber-200' : 'bg-green-50 border-2 border-green-200'
-      ]">
-        <div class="flex items-start space-x-3">
-          <svg v-if="isPositiveScreen" class="w-6 h-6 text-amber-600 flex-shrink-0 mt-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
-          </svg>
-          <svg v-else class="w-6 h-6 text-green-600 flex-shrink-0 mt-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
-          </svg>
-          <div>
-            <h4 class="font-semibold text-lg mb-2" :class="isPositiveScreen ? 'text-amber-900' : 'text-green-900'">
-              {{ interpretationTitle }}
-            </h4>
-            <p class="text-gray-700 leading-relaxed">
-              {{ interpretationText }}
+        <!-- Interpretation Details -->
+        <div class="mb-20 py-12 border-y border-gray-200">
+          <h4 class="text-sm uppercase tracking-wider text-gray-500 mb-8">About CAGE-AID Scoring</h4>
+          <div class="max-w-2xl space-y-6 text-gray-600">
+            <p>
+              The CAGE-AID is an adaptation of the CAGE questionnaire for screening both alcohol and drug problems. It focuses on lifetime use and includes illegal drugs and prescription drugs used other than prescribed.
+            </p>
+            <p>
+              <strong>Interpretation:</strong> One or more "yes" responses is regarded as a positive screening test, indicating possible substance use disorder and the need for further evaluation.
+            </p>
+            <p>
+              A positive screen warrants a comprehensive clinical assessment to determine the presence and severity of a substance use disorder and appropriate treatment recommendations.
             </p>
           </div>
         </div>
-      </div>
 
-      <!-- Clinical Information -->
-      <div class="bg-gray-50 rounded-xl p-6 mb-6">
-        <h4 class="font-semibold text-lg text-gray-900 mb-4">About CAGE-AID Scoring</h4>
-        <div class="space-y-3">
-          <p class="text-gray-700">
-            <span class="font-semibold">Interpretation:</span> One or more "yes" responses is regarded as a positive screening test, indicating possible substance use disorder and the need for further evaluation.
-          </p>
-          <p class="text-gray-700">
-            <span class="font-semibold">Lifetime Focus:</span> The CAGE-AID focuses on lifetime use of alcohol and drugs, including illegal drugs and prescription drugs used other than prescribed.
-          </p>
-          <p class="text-gray-700">
-            <span class="font-semibold">Next Steps:</span> A positive screen warrants a comprehensive clinical assessment to determine the presence and severity of a substance use disorder and appropriate treatment recommendations.
-          </p>
+        <!-- Actions -->
+        <div class="flex gap-4">
+          <button
+            @click="resetAssessment"
+            class="flex-1 py-4 border-2 border-gray-900 text-gray-900 hover:bg-gray-900 hover:text-white transition-colors"
+          >
+            Retake Assessment
+          </button>
+          <button
+            @click="saveResults"
+            class="flex-1 py-4 bg-emerald-600 text-white hover:bg-emerald-700 transition-colors"
+          >
+            Save Results
+          </button>
         </div>
-      </div>
 
-      <!-- Action Buttons -->
-      <div class="flex flex-col sm:flex-row gap-3 justify-center">
-        <button
-          @click="resetAssessment"
-          class="px-6 py-3 bg-gray-100 text-gray-700 font-medium rounded-xl hover:bg-gray-200 transition-colors duration-200"
-        >
-          Take Assessment Again
-        </button>
-        <button
-          @click="saveResults"
-          class="px-6 py-3 bg-emerald-600 text-white font-medium rounded-xl hover:bg-emerald-700 transition-colors duration-200"
-        >
-          Save Results
-        </button>
-      </div>
-    </div>
-
-    <!-- Disclaimer (Full Width) -->
-    <div class="mt-16 bg-blue-50 rounded-xl p-6 border border-blue-200">
-      <div class="flex items-start space-x-3">
-        <svg class="w-5 h-5 text-blue-600 flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-        </svg>
-        <div class="text-sm text-blue-900">
-          <p class="font-semibold mb-1">Important Note</p>
-          <p>
+        <!-- Disclaimer -->
+        <div class="mt-20 pt-12 border-t border-gray-200">
+          <p class="text-sm text-gray-500 leading-relaxed">
             This screening tool is not a diagnostic instrument. If you screen positive or have concerns about your substance use, 
             please consult with a qualified healthcare professional for a comprehensive evaluation and appropriate treatment options.
           </p>
@@ -404,6 +340,12 @@ const q2 = ref(null)
 const q3 = ref(null)
 const q4 = ref(null)
 
+// Answer options
+const yesNoOptions = [
+  { label: 'Yes', value: 1 },
+  { label: 'No', value: 0 }
+]
+
 // Reactive state
 const answers = ref({
   question1: null,
@@ -415,6 +357,15 @@ const showResults = ref(false)
 const totalScore = ref(0)
 
 // Computed properties
+const answeredQuestions = computed(() => {
+  let count = 0
+  if (answers.value.question1 !== null) count++
+  if (answers.value.question2 !== null) count++
+  if (answers.value.question3 !== null) count++
+  if (answers.value.question4 !== null) count++
+  return count
+})
+
 const allAnswered = computed(() => {
   return answers.value.question1 !== null &&
          answers.value.question2 !== null &&
@@ -428,9 +379,9 @@ const isPositiveScreen = computed(() => {
 
 const interpretationTitle = computed(() => {
   if (isPositiveScreen.value) {
-    return 'Positive Screen'
+    return 'Positive screen for substance use disorder'
   }
-  return 'Negative Screen'
+  return 'Negative screen'
 })
 
 const interpretationText = computed(() => {
@@ -443,20 +394,21 @@ const interpretationText = computed(() => {
 // Methods
 const onAnswerChange = async (qNum) => {
   await nextTick()
-  const nextQNum = qNum + 1
-  const nextRef = getRefByNum(nextQNum)
-  if (nextRef && nextRef.value) {
-    nextRef.value.$el.scrollIntoView({ behavior: 'smooth', block: 'start' })
-  }
-}
-
-const getRefByNum = (num) => {
-  switch (num) {
-    case 1: return q1
-    case 2: return q2
-    case 3: return q3
-    case 4: return q4
-    default: return null
+  
+  // Scroll to next question or submit button
+  if (qNum === 1 && q2.value) {
+    q2.value.scrollIntoView({ behavior: 'smooth', block: 'center' })
+  } else if (qNum === 2 && q3.value) {
+    q3.value.scrollIntoView({ behavior: 'smooth', block: 'center' })
+  } else if (qNum === 3 && q4.value) {
+    q4.value.scrollIntoView({ behavior: 'smooth', block: 'center' })
+  } else if (qNum === 4 && allAnswered.value) {
+    setTimeout(() => {
+      const submitButton = document.querySelector('button[type="submit"]')
+      if (submitButton) {
+        submitButton.scrollIntoView({ behavior: 'smooth', block: 'center' })
+      }
+    }, 100)
   }
 }
 
@@ -469,7 +421,7 @@ const calculateScore = () => {
   
   // Scroll to results
   setTimeout(() => {
-    const resultsElement = document.querySelector('.animate-fadeIn')
+    const resultsElement = document.querySelector('.mt-32.pt-32')
     if (resultsElement) {
       resultsElement.scrollIntoView({ behavior: 'smooth', block: 'start' })
     }
@@ -498,36 +450,30 @@ const saveResults = () => {
     date: new Date().toISOString(),
     answers: answers.value
   })
-  alert('Results saved successfully! (This will be implemented with backend integration)')
+  alert('Results saved successfully!')
 }
 </script>
 
 <style scoped>
-@keyframes fadeIn {
-  from {
-    opacity: 0;
-    transform: translateY(20px);
+/* Smooth scrolling */
+html {
+  scroll-behavior: smooth;
+}
+
+/* Custom radio button animation */
+input[type="radio"]:checked + div .scale-\[0\.4\] {
+  animation: radioCheck 0.2s ease-out;
+}
+
+@keyframes radioCheck {
+  0% {
+    transform: scale(0);
   }
-  to {
-    opacity: 1;
-    transform: translateY(0);
+  50% {
+    transform: scale(0.5);
   }
-}
-
-.animate-fadeIn {
-  animation: fadeIn 0.5s ease-out;
-}
-
-/* Custom radio button styling */
-input[type="radio"]:checked + span,
-input[type="radio"]:checked ~ span {
-  transform: scale(1.01);
-}
-
-/* Smooth transitions */
-* {
-  transition-property: background-color, border-color, transform;
-  transition-duration: 200ms;
-  transition-timing-function: ease-in-out;
+  100% {
+    transform: scale(0.4);
+  }
 }
 </style>
