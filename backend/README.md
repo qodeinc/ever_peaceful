@@ -1,4 +1,0 @@
-# Ever Peaceful Backend Architecture 
-
-
-
