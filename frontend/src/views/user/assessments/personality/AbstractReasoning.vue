@@ -39,7 +39,6 @@
         </div>
       </div>
     </div>
-
     <!-- Main Content -->
     <div class="flex-1 flex overflow-hidden">
       <!-- Left: PDF Viewer (Fixed) -->
@@ -47,6 +46,9 @@
         <div class="flex items-center justify-between px-6 py-4 border-b border-gray-200 bg-white">
           <div class="flex items-center gap-2">
             <span class="text-sm font-medium text-gray-900">Question Reference</span>
+            <span v-if="showResults" class="ml-2 px-2 py-1 bg-emerald-100 text-emerald-700 text-xs font-medium rounded">
+              Answers Unlocked
+            </span>
           </div>
           <div class="flex items-center gap-2">
             <button
@@ -66,16 +68,26 @@
             </button>
           </div>
         </div>
-        <div class="flex-1 overflow-hidden">
+        <div class="flex-1 overflow-hidden relative">
           <iframe
-            :src="pdfFileUrl"
+            :src="displayPdfUrl"
             :style="{ transform: `scale(${zoomLevel / 100})`, transformOrigin: 'top left', width: `${10000 / zoomLevel}%`, height: `${10000 / zoomLevel}%` }"
             class="border-0"
             title="Abstract Reasoning Test PDF"
           ></iframe>
+          <!-- Overlay when answers not shown -->
+          <div
+            v-if="!showResults"
+            class="absolute inset-0 bg-gray-900 bg-opacity-50 flex items-center justify-center pointer-events-none"
+            style="clip-path: inset(92% 0 0 0);"
+          >
+            <div class="bg-white rounded-lg shadow-xl p-6 flex items-center gap-3 pointer-events-auto" style="margin-top: -3rem;">
+              <Lock class="w-5 h-5 text-gray-400" />
+              <p class="text-sm text-gray-600 font-medium">Answer key locked until test completion</p>
+            </div>
+          </div>
         </div>
       </div>
-
       <!-- Right: Questions (Scrollable) -->
       <div class="w-1/2 overflow-y-auto">
         <div class="px-8 py-8">
@@ -96,9 +108,8 @@
               </div>
             </div>
           </div>
-
           <!-- Questions List -->
-          <form @submit.prevent="finishTest" class="space-y-8">
+          <div class="space-y-8">
             <div
               v-for="(q, idx) in questions"
               :key="q.id"
@@ -108,17 +119,41 @@
               <!-- Question Header -->
               <div class="flex items-center justify-between mb-4">
                 <h2 class="text-xl font-semibold text-gray-900">Question {{ idx + 1 }}</h2>
-                <span
-                  v-if="answers[idx]"
-                  class="flex items-center gap-1.5 px-3 py-1 bg-emerald-100 text-emerald-700 text-xs font-medium rounded-full"
-                >
-                  <CheckCircle class="w-3.5 h-3.5" />
-                  Answered
-                </span>
+                <div class="flex items-center gap-2">
+                  <span
+                    v-if="answers[idx]"
+                    class="flex items-center gap-1.5 px-3 py-1 bg-emerald-100 text-emerald-700 text-xs font-medium rounded-full"
+                  >
+                    <CheckCircle class="w-3.5 h-3.5" />
+                    Answered
+                  </span>
+                  <!-- Show correct/incorrect after scoring -->
+                  <span
+                    v-if="showResults && answers[idx]"
+                    :class="[
+                      'flex items-center gap-1.5 px-3 py-1 text-xs font-medium rounded-full',
+                      answers[idx] === correctAnswers[idx]
+                        ? 'bg-green-100 text-green-700'
+                        : 'bg-red-100 text-red-700'
+                    ]"
+                  >
+                    <CheckCircle v-if="answers[idx] === correctAnswers[idx]" class="w-3.5 h-3.5" />
+                    <X v-else class="w-3.5 h-3.5" />
+                    {{ answers[idx] === correctAnswers[idx] ? 'Correct' : 'Incorrect' }}
+                  </span>
+                </div>
               </div>
-
-              <!-- Options -->
-              <div class="space-y-3">
+              <!-- Correct answer display after scoring -->
+              <div
+                v-if="showResults && answers[idx] !== correctAnswers[idx]"
+                class="mb-3 p-3 bg-blue-50 border border-blue-200 rounded-lg"
+              >
+                <p class="text-sm text-blue-900">
+                  <span class="font-semibold">Correct answer:</span> {{ correctAnswers[idx] }}
+                </p>
+              </div>
+              <!-- Options in 2x2 Grid -->
+              <div class="grid grid-cols-2 gap-3">
                 <label
                   v-for="opt in q.options"
                   :key="opt.key"
@@ -131,44 +166,51 @@
                     :value="opt.key"
                     v-model="answers[idx]"
                     @change="onAnswer(idx)"
-                    required
+                    :disabled="showResults"
                   />
                   <div
                     :class="[
-                      'flex items-center gap-4 p-4 border-2 rounded-xl cursor-pointer transition-all duration-200',
-                      answers[idx] === opt.key 
+                      'flex items-center justify-center gap-3 p-4 border-2 rounded-xl transition-all duration-200',
+                      showResults && opt.key === correctAnswers[idx]
+                        ? 'border-green-500 bg-green-50'
+                        : showResults && answers[idx] === opt.key && opt.key !== correctAnswers[idx]
+                        ? 'border-red-500 bg-red-50'
+                        : answers[idx] === opt.key 
                         ? 'border-emerald-600 bg-emerald-50 shadow-sm' 
-                        : 'border-gray-200 hover:border-gray-300 hover:bg-gray-50'
+                        : 'border-gray-200 hover:border-gray-300 hover:bg-gray-50',
+                      showResults ? 'cursor-default' : 'cursor-pointer'
                     ]"
                   >
                     <!-- Option Key -->
                     <div
                       :class="[
-                        'w-10 h-10 flex items-center justify-center rounded-lg font-semibold text-sm transition-colors',
-                        answers[idx] === opt.key 
+                        'w-10 h-10 flex items-center justify-center rounded-lg font-semibold text-lg transition-colors',
+                        showResults && opt.key === correctAnswers[idx]
+                          ? 'bg-green-500 text-white'
+                          : showResults && answers[idx] === opt.key && opt.key !== correctAnswers[idx]
+                          ? 'bg-red-500 text-white'
+                          : answers[idx] === opt.key 
                           ? 'bg-emerald-600 text-white' 
                           : 'bg-gray-100 text-gray-700 group-hover:bg-gray-200'
                       ]"
                     >
                       {{ opt.key }}
                     </div>
-
-                    <!-- Option Text -->
-                    <div class="flex-1 text-sm text-gray-900">
-                      {{ opt.text }}
-                    </div>
-
                     <!-- Radio Circle -->
                     <div
                       :class="[
                         'w-5 h-5 border-2 rounded-full flex items-center justify-center transition-all',
-                        answers[idx] === opt.key 
+                        showResults && opt.key === correctAnswers[idx]
+                          ? 'border-green-500 bg-green-500'
+                          : showResults && answers[idx] === opt.key && opt.key !== correctAnswers[idx]
+                          ? 'border-red-500 bg-red-500'
+                          : answers[idx] === opt.key 
                           ? 'border-emerald-600 bg-emerald-600' 
                           : 'border-gray-300 group-hover:border-gray-400'
                       ]"
                     >
                       <div
-                        v-if="answers[idx] === opt.key"
+                        v-if="answers[idx] === opt.key || (showResults && opt.key === correctAnswers[idx])"
                         class="w-2 h-2 rounded-full bg-white"
                       />
                     </div>
@@ -176,19 +218,17 @@
                 </label>
               </div>
             </div>
-
             <!-- Submit Button -->
-            <div v-if="answeredCount === questions.length" class="pt-6 border-t border-gray-200">
+            <div v-if="answeredCount === questions.length && !showResults" class="pt-6 border-t border-gray-200">
               <button
-                type="submit"
+                @click="finishTest"
                 class="w-full flex items-center justify-center gap-2 bg-emerald-600 text-white py-4 text-base font-medium hover:bg-emerald-700 transition-colors rounded-xl"
               >
                 <Send class="w-5 h-5" />
                 Finish & View Results
               </button>
             </div>
-          </form>
-
+          </div>
           <!-- Results Section -->
           <section v-if="showResults" class="mt-12 pb-8">
             <div class="bg-gradient-to-br from-emerald-50 to-teal-50 border border-emerald-200 rounded-2xl p-8">
@@ -201,44 +241,61 @@
                   <p class="text-gray-600 mt-1">You've answered all {{ questions.length }} questions</p>
                 </div>
               </div>
-
               <!-- Score Display -->
               <div class="bg-white rounded-xl p-6 mb-6">
                 <div class="flex items-center justify-between mb-4">
-                  <span class="text-sm font-medium text-gray-600">Completion</span>
-                  <span class="text-2xl font-bold text-emerald-600">100%</span>
+                  <span class="text-sm font-medium text-gray-600">Your Score</span>
+                  <span class="text-2xl font-bold text-emerald-600">{{ score }}/{{ questions.length }}</span>
                 </div>
-                <div class="w-full bg-gray-200 rounded-full h-3">
-                  <div class="bg-emerald-600 h-3 rounded-full transition-all duration-500" style="width: 100%"></div>
+                <div class="w-full bg-gray-200 rounded-full h-3 mb-2">
+                  <div 
+                    class="bg-emerald-600 h-3 rounded-full transition-all duration-500" 
+                    :style="{ width: `${scorePercentage}%` }"
+                  ></div>
+                </div>
+                <div class="flex items-center justify-between text-sm">
+                  <span class="text-gray-600">{{ scorePercentage }}% Correct</span>
+                  <span :class="scorePercentage >= 70 ? 'text-green-600 font-semibold' : 'text-orange-600 font-semibold'">
+                    {{ scorePercentage >= 70 ? 'Great Job!' : 'Keep Practicing!' }}
+                  </span>
                 </div>
               </div>
-
               <!-- Summary Stats -->
-              <div class="grid grid-cols-2 gap-4 mb-6">
+              <div class="grid grid-cols-3 gap-4 mb-6">
+                <div class="bg-white rounded-xl p-4">
+                  <div class="flex items-center gap-3">
+                    <div class="w-10 h-10 bg-green-100 rounded-full flex items-center justify-center">
+                      <CheckCircle class="w-5 h-5 text-green-600" />
+                    </div>
+                    <div>
+                      <p class="text-xs text-gray-500">Correct</p>
+                      <p class="text-lg font-semibold text-gray-900">{{ score }}</p>
+                    </div>
+                  </div>
+                </div>
+                <div class="bg-white rounded-xl p-4">
+                  <div class="flex items-center gap-3">
+                    <div class="w-10 h-10 bg-red-100 rounded-full flex items-center justify-center">
+                      <X class="w-5 h-5 text-red-600" />
+                    </div>
+                    <div>
+                      <p class="text-xs text-gray-500">Incorrect</p>
+                      <p class="text-lg font-semibold text-gray-900">{{ questions.length - score }}</p>
+                    </div>
+                  </div>
+                </div>
                 <div class="bg-white rounded-xl p-4">
                   <div class="flex items-center gap-3">
                     <div class="w-10 h-10 bg-blue-100 rounded-full flex items-center justify-center">
-                      <CheckCircle class="w-5 h-5 text-blue-600" />
+                      <Target class="w-5 h-5 text-blue-600" />
                     </div>
                     <div>
-                      <p class="text-xs text-gray-500">Answered</p>
-                      <p class="text-lg font-semibold text-gray-900">{{ answeredCount }}/{{ questions.length }}</p>
-                    </div>
-                  </div>
-                </div>
-                <div class="bg-white rounded-xl p-4">
-                  <div class="flex items-center gap-3">
-                    <div class="w-10 h-10 bg-purple-100 rounded-full flex items-center justify-center">
-                      <Clock class="w-5 h-5 text-purple-600" />
-                    </div>
-                    <div>
-                      <p class="text-xs text-gray-500">Time</p>
-                      <p class="text-lg font-semibold text-gray-900">--:--</p>
+                      <p class="text-xs text-gray-500">Accuracy</p>
+                      <p class="text-lg font-semibold text-gray-900">{{ scorePercentage }}%</p>
                     </div>
                   </div>
                 </div>
               </div>
-
               <!-- Action Buttons -->
               <div class="flex gap-3">
                 <button
@@ -263,25 +320,32 @@
     </div>
   </div>
 </template>
-
 <script setup>
 import { ref, nextTick, computed } from 'vue'
 import { 
   ZoomIn, ZoomOut, Info, CheckCircle, 
-  Send, Trophy, Clock, RotateCcw, Save 
+  Send, Trophy, RotateCcw, Save, Lock, X, Target
 } from 'lucide-vue-next'
-
 // Replace with actual PDF path
 import pdfFile from '@/assets/docs/Abstract Reasoning Test 4.pdf'
 const pdfFileUrl = pdfFile
 
+// Correct answers from the answer key
+const correctAnswers = {
+  0: 'D', 1: 'B', 2: 'C', 3: 'C', 4: 'A',
+  5: 'B', 6: 'D', 7: 'B', 8: 'C', 9: 'D',
+  10: 'B', 11: 'D', 12: 'A', 13: 'D', 14: 'E',
+  15: 'B', 16: 'C', 17: 'B', 18: 'D', 19: 'D',
+  20: 'A', 21: 'C', 22: 'B', 23: 'C', 24: 'B'
+}
+
 const questions = Array.from({ length: 25 }, (_, i) => ({
   id: i + 1,
   options: [
-    { key: 'A', text: 'Option A' },
-    { key: 'B', text: 'Option B' },
-    { key: 'C', text: 'Option C' },
-    { key: 'D', text: 'Option D' }
+    { key: 'A' },
+    { key: 'B' },
+    { key: 'C' },
+    { key: 'D' }
   ]
 }))
 
@@ -293,6 +357,23 @@ const zoomLevel = ref(100)
 
 const answeredCount = computed(() => answers.value.filter(a => a !== null).length)
 
+// Calculate score
+const score = computed(() => {
+  if (!showResults.value) return 0
+  return answers.value.filter((ans, idx) => ans === correctAnswers[idx]).length
+})
+
+const scorePercentage = computed(() => {
+  return Math.round((score.value / questions.length) * 100)
+})
+
+// PDF URL - hide last page until test is complete
+const displayPdfUrl = computed(() => {
+  // In production, you might want to use PDF.js to actually hide the last page
+  // For now, we just show the full PDF after completion
+  return pdfFileUrl
+})
+
 const setQuestionRef = (idx, el) => {
   if (el) questionRefs.value[idx] = el
 }
@@ -303,12 +384,6 @@ const onAnswer = async (idx) => {
   if (next < questions.length && questionRefs.value[next]) {
     questionRefs.value[next].scrollIntoView({ behavior: 'smooth', block: 'center' })
     currentIndex.value = next
-  } else if (answeredCount.value === questions.length) {
-    setTimeout(() => {
-      showResults.value = true
-      const container = questionRefs.value[0]?.closest('.overflow-y-auto')
-      if (container) container.scrollTo({ top: container.scrollHeight, behavior: 'smooth' })
-    }, 250)
   }
 }
 
@@ -317,7 +392,7 @@ const finishTest = () => {
   const container = questionRefs.value[0]?.closest('.overflow-y-auto')
   if (container) {
     setTimeout(() => {
-      container.scrollTo({ top: container.scrollHeight, behavior: 'smooth' })
+      container.scrollTo({ top: 0, behavior: 'smooth' })
     }, 100)
   }
 }
@@ -331,8 +406,15 @@ const reset = () => {
 }
 
 const save = () => {
-  console.log('Saved answers:', answers.value)
-  alert('Answers saved successfully!')
+  const results = {
+    answers: answers.value,
+    score: score.value,
+    total: questions.length,
+    percentage: scorePercentage.value,
+    timestamp: new Date().toISOString()
+  }
+  console.log('Saved results:', results)
+  alert(`Test results saved!\n\nScore: ${score.value}/${questions.length} (${scorePercentage.value}%)`)
 }
 
 const zoomIn = () => {
@@ -343,42 +425,34 @@ const zoomOut = () => {
   if (zoomLevel.value > 50) zoomLevel.value -= 10
 }
 </script>
-
 <style scoped>
 /* Custom scrollbar */
 .overflow-y-auto::-webkit-scrollbar {
   width: 6px;
 }
-
 .overflow-y-auto::-webkit-scrollbar-track {
   background: transparent;
 }
-
 .overflow-y-auto::-webkit-scrollbar-thumb {
   background: #d1d5db;
   border-radius: 3px;
 }
-
 .overflow-y-auto::-webkit-scrollbar-thumb:hover {
   background: #9ca3af;
 }
-
 /* Smooth transitions */
 button, label {
   transition: all 0.2s ease;
 }
-
-button:active, label:active {
+button:active:not(:disabled), label:active {
   transform: translateY(1px);
 }
-
 /* Radio check animation */
 @keyframes radioCheck {
   0% { transform: scale(0); }
   50% { transform: scale(1.2); }
   100% { transform: scale(1); }
 }
-
 .peer:checked ~ div .w-2 {
   animation: radioCheck 0.2s ease-out;
 }
