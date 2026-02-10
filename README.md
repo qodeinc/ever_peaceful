@@ -6,13 +6,14 @@
 
 ### **Tech Stack**
 - **Frontend**: Vue 3 + TypeScript + TailwindCSS + Pinia
-- **Backend**: Go + GraphQL + PostgreSQL
+- **Backend**: PHP (Laravel) + Redis + PostgreSQL 
 - **Real-time**: WebSockets (Gorilla WebSocket)
 - **Authentication**: JWT + OAuth (Google, Microsoft)
 - **File Storage**: AWS S3 / Local Storage
 - **Caching**: Redis
 - **Message Queue**: Redis Pub/Sub
 - **Monitoring**: Prometheus + Grafana
+DOCKER
 
 ---
 
@@ -60,70 +61,157 @@ ever_peaceful/
 │   ├── package.json
 │   └── vite.config.ts
 │
-├── backend/                          # Go Backend
-│   ├── cmd/                          # Application entry points
-│   │   └── server/
-│   │       └── main.go              # Main server entry point
-│   ├── internal/                     # Private application code
-│   │   ├── config/                  # Configuration management
-│   │   │   ├── config.go            # Configuration structs
-│   │   │   └── env.go               # Environment variables
-│   │   ├── domain/                  # Business logic layer
-│   │   │   ├── user/                # User domain
-│   │   │   │   ├── entity.go        # User entity
-│   │   │   │   ├── repository.go    # Repository interface
-│   │   │   │   ├── service.go       # Business logic
-│   │   │   │   └── validator.go     # Validation logic
-│   │   │   ├── therapist/           # Therapist domain
-│   │   │   ├── session/             # Session domain
-│   │   │   ├── message/             # Message domain
-│   │   │   ├── notification/        # Notification domain
-│   │   │   └── auth/                # Authentication domain
-│   │   ├── infrastructure/          # External concerns
-│   │   │   ├── database/            # Database layer
-│   │   │   │   ├── postgres/        # PostgreSQL implementation
-│   │   │   │   │   ├── connection.go
-│   │   │   │   │   ├── migrations/  # Database migrations
-│   │   │   │   │   └── repositories/ # Repository implementations
-│   │   │   │   └── redis/           # Redis implementation
-│   │   │   ├── external/            # External service integrations
-│   │   │   │   ├── calendly/        # Calendly integration
-│   │   │   │   ├── oauth/           # OAuth providers
-│   │   │   │   ├── email/           # Email service
-│   │   │   │   └── storage/         # File storage
-│   │   │   └── websocket/           # WebSocket server
-│   │   ├── delivery/                # Delivery layer (API handlers)
-│   │   │   ├── graphql/             # GraphQL resolvers
-│   │   │   │   ├── schema.graphql   # GraphQL schema
-│   │   │   │   ├── resolvers/       # Resolver implementations
-│   │   │   │   └── middleware/      # GraphQL middleware
-│   │   │   ├── http/                # HTTP handlers
-│   │   │   │   ├── auth.go          # Auth endpoints
-│   │   │   │   ├── upload.go        # File upload endpoints
-│   │   │   │   └── health.go        # Health check endpoints
-│   │   │   └── websocket/           # WebSocket handlers
-│   │   ├── middleware/              # HTTP middleware
-│   │   │   ├── auth.go              # Authentication middleware
-│   │   │   ├── cors.go              # CORS middleware
-│   │   │   ├── logging.go           # Logging middleware
-│   │   │   └── rate_limit.go        # Rate limiting
-│   │   └── pkg/                     # Shared packages
-│   │       ├── jwt/                 # JWT utilities
-│   │       ├── password/            # Password hashing
-│   │       ├── validator/           # Input validation
-│   │       ├── logger/              # Logging utilities
-│   │       └── errors/              # Error handling
-│   ├── api/                         # API definitions
-│   │   ├── graphql/                 # GraphQL schema files
-│   │   └── openapi/                 # OpenAPI specifications
-│   ├── migrations/                  # Database migrations
-│   ├── scripts/                     # Build and deployment scripts
-│   ├── docker/                      # Docker configurations
-│   │   ├── Dockerfile
-│   │   └── docker-compose.yml
-│   ├── go.mod
-│   ├── go.sum
-│   └── Makefile
+backend/
+├── app/
+│   ├── Console/
+│   │   └── Commands/       # Artisan commands
+│   ├── Events/             # Event classes
+│   │   ├── SessionStarted.php
+│   │   ├── MessageSent.php
+│   │   └── AssessmentCompleted.php
+│   ├── Exceptions/         # Custom exceptions
+│   │   └── Handler.php
+│   ├── Http/
+│   │   ├── Controllers/    # API Controllers
+│   │   │   ├── Auth/
+│   │   │   │   ├── AuthController.php
+│   │   │   │   ├── RegisterController.php
+│   │   │   │   └── PasswordResetController.php
+│   │   │   ├── User/
+│   │   │   │   ├── UserController.php
+│   │   │   │   ├── ProfileController.php
+│   │   │   │   └── AssessmentController.php
+│   │   │   ├── Therapist/
+│   │   │   │   ├── TherapistController.php
+│   │   │   │   ├── ClientController.php
+│   │   │   │   ├── SessionController.php
+│   │   │   │   └── SessionNoteController.php
+│   │   │   ├── Admin/
+│   │   │   │   ├── AdminController.php
+│   │   │   │   ├── UserManagementController.php
+│   │   │   │   ├── TherapistManagementController.php
+│   │   │   │   └── AnalyticsController.php
+│   │   │   ├── Session/
+│   │   │   │   ├── SessionController.php
+│   │   │   │   └── BookingController.php
+│   │   │   ├── Chat/
+│   │   │   │   └── MessageController.php
+│   │   │   ├── Calendar/
+│   │   │   │   └── CalendarController.php
+│   │   │   ├── Payment/
+│   │   │   │   └── PaymentController.php
+│   │   │   └── Resource/
+│   │   │       └── ResourceController.php
+│   │   ├── Middleware/     # Custom middleware
+│   │   │   ├── EnsureUserIsVerified.php
+│   │   │   ├── RoleMiddleware.php
+│   │   │   └── RateLimitMiddleware.php
+│   │   ├── Requests/       # Form request validation
+│   │   │   ├── Auth/
+│   │   │   ├── User/
+│   │   │   └── Therapist/
+│   │   ├── Resources/      # API Resources (transformers)
+│   │   │   ├── UserResource.php
+│   │   │   ├── TherapistResource.php
+│   │   │   └── SessionResource.php
+│   │   └── Kernel.php
+│   ├── Jobs/               # Queue jobs
+│   │   ├── SendWelcomeEmail.php
+│   │   ├── ProcessAssessment.php
+│   │   └── SendNotification.php
+│   ├── Listeners/          # Event listeners
+│   │   ├── SendSessionReminder.php
+│   │   └── UpdateUserStatistics.php
+│   ├── Mail/               # Mail classes
+│   │   ├── WelcomeEmail.php
+│   │   └── SessionReminder.php
+│   ├── Models/             # Eloquent models
+│   │   ├── User.php
+│   │   ├── Therapist.php
+│   │   ├── Admin.php
+│   │   ├── Session.php
+│   │   ├── SessionNote.php
+│   │   ├── Assessment.php
+│   │   ├── AssessmentResult.php
+│   │   ├── Message.php
+│   │   ├── Conversation.php
+│   │   ├── Appointment.php
+│   │   ├── Payment.php
+│   │   ├── Resource.php
+│   │   ├── Alert.php
+│   │   ├── Task.php
+│   │   └── MoodEntry.php
+│   ├── Policies/           # Authorization policies
+│   │   ├── UserPolicy.php
+│   │   ├── SessionPolicy.php
+│   │   └── TherapistPolicy.php
+│   ├── Repositories/       # Repository pattern (optional)
+│   │   ├── UserRepository.php
+│   │   └── SessionRepository.php
+│   ├── Services/           # Business logic services
+│   │   ├── AuthService.php
+│   │   ├── SessionService.php
+│   │   ├── AssessmentService.php
+│   │   ├── ChatService.php
+│   │   ├── CalendarService.php
+│   │   ├── PaymentService.php
+│   │   ├── NotificationService.php
+│   │   └── AnalyticsService.php
+│   └── Providers/
+│       ├── AppServiceProvider.php
+│       ├── AuthServiceProvider.php
+│       └── EventServiceProvider.php
+├── bootstrap/
+│   └── app.php
+├── config/                  # Configuration files
+│   ├── app.php
+│   ├── auth.php
+│   ├── database.php
+│   ├── cache.php
+│   ├── queue.php
+│   ├── sanctum.php
+│   ├── broadcasting.php
+│   └── services.php
+├── database/
+│   ├── migrations/         # Database migrations
+│   │   ├── 2024_01_01_000001_create_users_table.php
+│   │   ├── 2024_01_01_000002_create_therapists_table.php
+│   │   ├── 2024_01_01_000003_create_sessions_table.php
+│   │   ├── 2024_01_01_000004_create_assessments_table.php
+│   │   ├── 2024_01_01_000005_create_messages_table.php
+│   │   └── ...
+│   ├── seeders/           # Database seeders
+│   │   ├── DatabaseSeeder.php
+│   │   ├── UserSeeder.php
+│   │   └── AssessmentSeeder.php
+│   └── factories/         # Model factories
+│       ├── UserFactory.php
+│       └── TherapistFactory.php
+├── public/                 # Public entry point
+│   ├── index.php
+│   └── .htaccess
+├── resources/
+│   ├── lang/              # Language files
+│   └── views/             # Blade templates (if needed)
+├── routes/
+│   ├── api.php            # API routes
+│   ├── web.php            # Web routes
+│   └── channels.php       # Broadcasting channels
+├── storage/               # Storage directory
+│   ├── app/              # Application files
+│   ├── framework/        # Framework files
+│   └── logs/             # Log files
+├── tests/                 # Tests
+│   ├── Feature/
+│   │   ├── AuthTest.php
+│   │   └── SessionTest.php
+│   └── Unit/
+│       └── UserTest.php
+├── .env.example
+├── .gitignore
+├── artisan               # Artisan CLI
+├── composer.json
+└── phpunit.xml
 │
 ├── docs/                            # Documentation
 │   ├── api/                         # API documentation

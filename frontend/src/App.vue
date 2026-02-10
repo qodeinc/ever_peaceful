@@ -43,7 +43,8 @@
 </template>
 <script setup lang="ts">
 import { ref, nextTick } from 'vue'
-import { useRouter, RouteLocationNormalized } from 'vue-router'
+import { useRouter } from 'vue-router'
+import type { RouteLocationNormalized } from 'vue-router'
 import DevAuthPanel from './components/DevAuthPanel.vue'
 
 const router = useRouter()
