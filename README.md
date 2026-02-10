@@ -1,5 +1,5 @@
 # Ever Peaceful - Mental Health Platform Architecture
-
+ 
 ## 🏗️ **System Overview**
 
 **Ever Peaceful** is a comprehensive mental health platform connecting users with licensed therapists, featuring real-time communication, session management, progress tracking, and administrative oversight.
